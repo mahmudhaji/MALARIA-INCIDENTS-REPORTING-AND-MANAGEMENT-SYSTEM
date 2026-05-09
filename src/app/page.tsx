@@ -10,11 +10,12 @@ import { Label } from "@/components/ui/label";
 import { login } from "@/lib/auth-store";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
-import { User, ShieldCheck, UserCircle, Lock, Loader2 } from "lucide-react";
+import { UserCircle, Lock, Loader2, Eye, EyeOff } from "lucide-react";
 
 export default function Home() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { toast } = useToast();
@@ -83,13 +84,28 @@ export default function Home() {
                 </div>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="password">Password</Label>
+                  <Link 
+                    href="#" 
+                    className="text-xs text-primary hover:underline font-semibold"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      toast({
+                        title: "Account Recovery",
+                        description: "Please contact your system administrator to reset your password.",
+                      });
+                    }}
+                  >
+                    Forgot Password?
+                  </Link>
+                </div>
                 <div className="relative">
                   <Input 
                     id="password" 
-                    type="password" 
+                    type={showPassword ? "text" : "password"} 
                     placeholder="••••••••" 
-                    className="pl-10 h-12"
+                    className="pl-10 pr-10 h-12"
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
@@ -97,6 +113,13 @@ export default function Home() {
                   <span className="absolute left-3 top-3.5 text-slate-400">
                      <Lock className="h-5 w-5" />
                   </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-3.5 text-slate-400 hover:text-slate-600 transition-colors"
+                  >
+                    {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                  </button>
                 </div>
               </div>
               <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-white h-12 text-lg font-bold shadow-lg" disabled={isLoading}>
