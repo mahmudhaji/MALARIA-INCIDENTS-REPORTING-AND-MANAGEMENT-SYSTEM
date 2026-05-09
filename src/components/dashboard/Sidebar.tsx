@@ -17,16 +17,21 @@ import {
   Bell, 
   Settings, 
   LogOut,
-  User,
-  ShieldCheck,
+  ChevronDown,
   Users
 } from "lucide-react";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 
 export function AppSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const { toast } = useToast();
   const [user, setUser] = useState<UserType | null>(null);
+  const [isUsersOpen, setIsUsersOpen] = useState(false);
 
   useEffect(() => {
     setUser(getCurrentUser());
@@ -77,7 +82,16 @@ export function AppSidebar() {
     if (user.role === 'Administrator') {
       return [
         ...baseNav,
-        { name: 'User Management', href: '/dashboard/users', icon: Users },
+        { 
+          name: 'User Management', 
+          href: '/dashboard/users', 
+          icon: Users,
+          subItems: [
+            { name: 'CHWs', href: '/dashboard/users?role=CHW' },
+            { name: 'Doctors', href: '/dashboard/users?role=Doctor' },
+            { name: 'Health Officers', href: '/dashboard/users?role=Health%20Officer' },
+          ]
+        },
         { name: 'System Alerts', href: '/dashboard/alerts', icon: Bell },
         { name: 'Settings', href: '/dashboard/settings', icon: Settings },
       ];
@@ -111,6 +125,47 @@ export function AppSidebar() {
           <nav className="space-y-1">
             {navigation.map((item) => {
               const isActive = pathname === item.href;
+              const hasSubItems = item.subItems && item.subItems.length > 0;
+
+              if (hasSubItems) {
+                return (
+                  <Collapsible
+                    key={item.name}
+                    open={isUsersOpen}
+                    onOpenChange={setIsUsersOpen}
+                    className="w-full"
+                    onMouseEnter={() => setIsUsersOpen(true)}
+                    onMouseLeave={() => setIsUsersOpen(false)}
+                  >
+                    <CollapsibleTrigger asChild>
+                      <button
+                        className={cn(
+                          "flex w-full items-center justify-between gap-3 px-4 py-3 text-sm font-semibold rounded-lg transition-all duration-200 text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-white",
+                          (isActive || pathname.startsWith('/dashboard/users')) && "bg-sidebar-accent/50 text-white"
+                        )}
+                      >
+                        <div className="flex items-center gap-3">
+                          <item.icon className="h-5 w-5" />
+                          {item.name}
+                        </div>
+                        <ChevronDown className={cn("h-4 w-4 transition-transform", isUsersOpen && "rotate-180")} />
+                      </button>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="pl-12 space-y-1 mt-1 animate-in slide-in-from-top-2 duration-200">
+                      {item.subItems?.map((sub) => (
+                        <Link
+                          key={sub.name}
+                          href={sub.href}
+                          className="block py-2 text-xs font-medium text-sidebar-foreground/40 hover:text-white transition-colors"
+                        >
+                          {sub.name}
+                        </Link>
+                      ))}
+                    </CollapsibleContent>
+                  </Collapsible>
+                );
+              }
+
               return (
                 <Link
                   key={item.name}
