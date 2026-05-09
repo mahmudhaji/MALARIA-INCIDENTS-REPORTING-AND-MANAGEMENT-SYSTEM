@@ -11,18 +11,21 @@ import { login } from "@/lib/auth-store";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 import { UserCircle, Lock, Loader2, Eye, EyeOff, AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 export default function Home() {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setError(null);
 
     // Artificial delay for better UX
     setTimeout(() => {
@@ -35,10 +38,11 @@ export default function Home() {
         });
         router.push("/dashboard");
       } else {
+        setError("Unidentified credentials. Please check your username and password and try again.");
         toast({
           variant: "destructive",
           title: "Authentication Failed",
-          description: "Unidentified credentials. Please check your username and password and try again.",
+          description: "Invalid username or password.",
         });
         setIsLoading(false);
       }
@@ -66,6 +70,16 @@ export default function Home() {
         <Card className="shadow-2xl border-none overflow-hidden">
           <div className="h-2 bg-primary w-full" />
           <CardContent className="pt-8 space-y-6">
+            {error && (
+              <Alert variant="destructive" className="animate-in slide-in-from-top-2 duration-300">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Error</AlertTitle>
+                <AlertDescription>
+                  {error}
+                </AlertDescription>
+              </Alert>
+            )}
+
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="username">Username</Label>
@@ -75,7 +89,10 @@ export default function Home() {
                     placeholder="Enter your username" 
                     className="pl-10 h-12"
                     value={username}
-                    onChange={(e) => setUsername(e.target.value)}
+                    onChange={(e) => {
+                      setUsername(e.target.value);
+                      if (error) setError(null);
+                    }}
                     required
                   />
                   <span className="absolute left-3 top-3.5 text-slate-400">
@@ -107,7 +124,10 @@ export default function Home() {
                     placeholder="••••••••" 
                     className="pl-10 pr-10 h-12"
                     value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    onChange={(e) => {
+                      setPassword(e.target.value);
+                      if (error) setError(null);
+                    }}
                     required
                   />
                   <span className="absolute left-3 top-3.5 text-slate-400">
