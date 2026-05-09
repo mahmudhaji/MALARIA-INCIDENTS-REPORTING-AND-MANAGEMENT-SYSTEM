@@ -59,6 +59,7 @@ export function AppSidebar() {
     if (user.role === 'Doctor') {
       return [
         ...baseNav,
+        { name: 'Report Case', href: '/dashboard/report', icon: PlusCircle },
         { name: 'Patient Cases', href: '/dashboard/cases', icon: ClipboardList },
         { name: 'Reports', href: '/dashboard/analytics', icon: BarChart3 },
       ];
