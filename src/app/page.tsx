@@ -10,7 +10,7 @@ import { Label } from "@/components/ui/label";
 import { login } from "@/lib/auth-store";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
-import { UserCircle, Lock, Loader2, Eye, EyeOff } from "lucide-react";
+import { UserCircle, Lock, Loader2, Eye, EyeOff, AlertCircle } from "lucide-react";
 
 export default function Home() {
   const [username, setUsername] = useState("");
@@ -37,8 +37,8 @@ export default function Home() {
       } else {
         toast({
           variant: "destructive",
-          title: "Login Failed",
-          description: "Invalid credentials. Please check your username and password.",
+          title: "Authentication Failed",
+          description: "Unidentified credentials. Please check your username and password and try again.",
         });
         setIsLoading(false);
       }
