@@ -1,58 +1,119 @@
+
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { ShieldCheck } from "lucide-react";
+import { login } from "@/lib/auth-store";
+import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
+import { User, ShieldCheck, UserCircle, Lock, Loader2 } from "lucide-react";
 
 export default function Home() {
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter();
+  const { toast } = useToast();
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+
+    // Artificial delay for better UX
+    setTimeout(() => {
+      const user = login(username, password);
+      if (user) {
+        toast({
+          title: "Login Successful",
+          description: `Welcome back, ${user.name}! Accessing ${user.role} dashboard.`,
+          className: "bg-primary text-white",
+        });
+        router.push("/dashboard");
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Login Failed",
+          description: "Invalid credentials. Please check your username and password.",
+        });
+        setIsLoading(false);
+      }
+    }, 800);
+  };
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
-      <div className="max-w-md w-full space-y-8">
+      <div className="max-w-md w-full space-y-8 animate-in fade-in zoom-in duration-500">
         <div className="text-center space-y-4">
-          <div className="inline-flex items-center justify-center w-24 h-24 rounded-full border-4 border-destructive/20 mb-2">
-            <svg viewBox="0 0 100 100" className="w-16 h-16">
-               {/* Simple Mosquito Icon Surrogate */}
-               <circle cx="50" cy="50" r="40" fill="none" stroke="currentColor" strokeWidth="2" className="text-destructive"/>
-               <path d="M30,50 L70,50 M50,30 L50,70" stroke="currentColor" strokeWidth="2" className="text-destructive"/>
-               <line x1="35" y1="35" x2="65" y2="65" stroke="currentColor" strokeWidth="2" className="text-destructive"/>
-               <line x1="65" y1="35" x2="35" y2="65" stroke="currentColor" strokeWidth="2" className="text-destructive"/>
+          <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white shadow-xl border-4 border-primary/10 mb-2">
+            <svg viewBox="0 0 100 100" className="w-12 h-12">
+               <circle cx="50" cy="50" r="40" fill="none" stroke="hsl(var(--primary))" strokeWidth="3"/>
+               <path d="M30,50 L70,50 M50,30 L50,70" stroke="hsl(var(--destructive))" strokeWidth="3"/>
+               <line x1="35" y1="35" x2="65" y2="65" stroke="hsl(var(--primary))" strokeWidth="3"/>
+               <line x1="65" y1="35" x2="35" y2="65" stroke="hsl(var(--primary))" strokeWidth="3"/>
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-slate-800 tracking-tight">
-            Malaria Incidents Reporting and Management System
+            PataMalaria Portal
           </h1>
-          <p className="text-sm text-slate-500">Please sign in to your account</p>
+          <p className="text-sm text-slate-500 uppercase tracking-widest font-semibold">Incident Surveillance System</p>
         </div>
 
-        <Card className="shadow-lg border-none">
-          <CardContent className="pt-6 space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
-              <div className="relative">
-                <Input id="username" placeholder="Username" className="pl-10" />
-                <span className="absolute left-3 top-2.5 text-slate-400">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
-                </span>
+        <Card className="shadow-2xl border-none overflow-hidden">
+          <div className="h-2 bg-primary w-full" />
+          <CardContent className="pt-8 space-y-6">
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="username">Username</Label>
+                <div className="relative">
+                  <Input 
+                    id="username" 
+                    placeholder="Enter your username" 
+                    className="pl-10 h-12"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                  />
+                  <span className="absolute left-3 top-3.5 text-slate-400">
+                    <UserCircle className="h-5 w-5" />
+                  </span>
+                </div>
               </div>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
-              <div className="relative">
-                <Input id="password" type="password" placeholder="Password" className="pl-10" />
-                <span className="absolute left-3 top-2.5 text-slate-400">
-                   <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-                </span>
+              <div className="space-y-2">
+                <Label htmlFor="password">Password</Label>
+                <div className="relative">
+                  <Input 
+                    id="password" 
+                    type="password" 
+                    placeholder="••••••••" 
+                    className="pl-10 h-12"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                  <span className="absolute left-3 top-3.5 text-slate-400">
+                     <Lock className="h-5 w-5" />
+                  </span>
+                </div>
               </div>
-            </div>
-            <Button className="w-full bg-primary hover:bg-primary/90 text-white py-6 text-lg" asChild>
-              <Link href="/dashboard">Login</Link>
-            </Button>
-            <div className="text-center">
-              <Link href="#" className="text-sm text-primary hover:underline">Forgot password?</Link>
+              <Button type="submit" className="w-full bg-primary hover:bg-primary/90 text-white h-12 text-lg font-bold shadow-lg" disabled={isLoading}>
+                {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Signing in...</> : "Sign In"}
+              </Button>
+            </form>
+            <div className="text-center pt-2">
+              <Link href="#" className="text-sm text-primary font-medium hover:underline">Trouble signing in? Contact IT Support</Link>
             </div>
           </CardContent>
         </Card>
+        
+        <div className="flex justify-center gap-4 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
+          <span>Security Compliant</span>
+          <span>•</span>
+          <span>Region V1.4</span>
+        </div>
       </div>
     </div>
   );

@@ -1,19 +1,49 @@
+
+"use client";
+
+import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 import { AppSidebar } from "@/components/dashboard/Sidebar";
 import { UserNav } from "@/components/dashboard/UserNav";
 import { Toaster } from "@/components/ui/toaster";
+import { getCurrentUser } from "@/lib/auth-store";
+import { Loader2 } from "lucide-react";
 
 export default function DashboardLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    const user = getCurrentUser();
+    if (!user) {
+      router.push("/");
+    } else {
+      setIsAuthenticated(true);
+    }
+  }, [router]);
+
+  if (isAuthenticated === null) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-10 w-10 animate-spin text-primary" />
+          <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Verifying Session...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex min-h-screen bg-slate-50">
       <AppSidebar />
       <div className="flex-1 flex flex-col min-w-0">
-        <header className="h-16 border-b bg-white flex items-center justify-between px-8 sticky top-0 z-30">
+        <header className="h-16 border-b bg-white flex items-center justify-between px-8 sticky top-0 z-30 shadow-sm">
           <div className="flex items-center gap-4">
-             <h2 className="text-xl font-bold text-primary">MALARIA INCIDENTS REPORTING AND MANAGEMENT SYSTEM</h2>
+             <h2 className="text-sm font-black text-primary uppercase tracking-tighter sm:text-lg">Malaria Reporting & Management System</h2>
           </div>
           <UserNav />
         </header>
