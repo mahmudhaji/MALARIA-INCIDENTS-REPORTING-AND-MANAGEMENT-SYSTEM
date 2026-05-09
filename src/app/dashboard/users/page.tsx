@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { 
   Table, 
@@ -32,8 +32,9 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
-import { UserPlus, Search, Edit2, Trash2, Loader2 } from "lucide-react";
+import { UserPlus, Search, Edit2, Trash2, Loader2, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import Link from "next/link";
 
 const MOCK_USERS_LIST = [
   { username: "asha01", fullName: "Asha Hamisi", role: "CHW", status: "Active", email: "asha@health.go.ke" },
@@ -45,10 +46,10 @@ const MOCK_USERS_LIST = [
   { username: "karanja_h", fullName: "Karanja Health", role: "Health Officer", status: "Active", email: "karanja@health.go.ke" },
 ];
 
-export default function UserManagementPage() {
+function UserManagementContent() {
   const { toast } = useToast();
   const searchParams = useSearchParams();
-  const roleFilter = searchParams.get('role');
+  const roleFilter = searchParams.get('role'); // e.g., "Doctor"
   
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState(roleFilter || "CHW");
@@ -68,6 +69,7 @@ export default function UserManagementPage() {
   useEffect(() => {
     if (roleFilter) {
       setActiveTab(roleFilter);
+      setFormData(prev => ({ ...prev, role: roleFilter }));
     }
   }, [roleFilter]);
 
@@ -95,7 +97,7 @@ export default function UserManagementPage() {
         username: "",
         fullName: "",
         email: "",
-        role: activeTab,
+        role: roleFilter || activeTab,
         status: "Active"
       });
     }
@@ -171,13 +173,26 @@ export default function UserManagementPage() {
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-800">User Management</h1>
-          <p className="text-sm text-muted-foreground">Administrate system access for health workers and medical staff.</p>
+          <div className="flex items-center gap-2 mb-1">
+            {roleFilter && (
+              <Link href="/dashboard/users" className="text-primary hover:underline flex items-center gap-1 text-sm font-medium">
+                <ArrowLeft className="h-3 w-3" /> All Users
+              </Link>
+            )}
+          </div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-800">
+            {roleFilter ? `Manage ${roleFilter}s` : "User Management"}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {roleFilter 
+              ? `Listing all registered ${roleFilter.toLowerCase()}s in the system.` 
+              : "Administrate system access for health workers and medical staff."}
+          </p>
         </div>
         <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
           <DialogTrigger asChild>
             <Button className="bg-primary hover:bg-primary/90 shadow-sm" onClick={() => handleOpenForm()}>
-              <UserPlus className="mr-2 h-4 w-4" /> Add New User
+              <UserPlus className="mr-2 h-4 w-4" /> Add New {roleFilter || "User"}
             </Button>
           </DialogTrigger>
           <DialogContent className="sm:max-w-[425px]">
@@ -220,7 +235,11 @@ export default function UserManagementPage() {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label htmlFor="role">Role</Label>
-                    <Select value={formData.role} onValueChange={(val) => setFormData({...formData, role: val})}>
+                    <Select 
+                      value={formData.role} 
+                      onValueChange={(val) => setFormData({...formData, role: val})}
+                      disabled={!!roleFilter && !editingUser}
+                    >
                       <SelectTrigger>
                         <SelectValue placeholder="Select role" />
                       </SelectTrigger>
@@ -260,7 +279,7 @@ export default function UserManagementPage() {
         <div className="relative flex-1 max-w-sm">
           <Search className="absolute left-3 top-2.5 h-4 w-4 text-slate-400" />
           <Input 
-            placeholder="Search by username or name..." 
+            placeholder={`Search by username or name...`} 
             className="pl-9"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -268,25 +287,39 @@ export default function UserManagementPage() {
         </div>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="bg-slate-100 p-1 mb-4 h-12">
-          <TabsTrigger value="CHW" className="px-8 font-bold data-[state=active]:bg-white data-[state=active]:text-primary">CHWs</TabsTrigger>
-          <TabsTrigger value="Doctor" className="px-8 font-bold data-[state=active]:bg-white data-[state=active]:text-primary">Doctors</TabsTrigger>
-          <TabsTrigger value="Health Officer" className="px-8 font-bold data-[state=active]:bg-white data-[state=active]:text-primary">Health Officers</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="CHW" className="animate-in fade-in zoom-in-95 duration-300">
-          <UserTable users={filterUsers("CHW")} />
-        </TabsContent>
-        
-        <TabsContent value="Doctor" className="animate-in fade-in zoom-in-95 duration-300">
-          <UserTable users={filterUsers("Doctor")} />
-        </TabsContent>
-        
-        <TabsContent value="Health Officer" className="animate-in fade-in zoom-in-95 duration-300">
-          <UserTable users={filterUsers("Health Officer")} />
-        </TabsContent>
-      </Tabs>
+      {roleFilter ? (
+        <div className="animate-in fade-in duration-500">
+          <UserTable users={filterUsers(roleFilter)} />
+        </div>
+      ) : (
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="bg-slate-100 p-1 mb-4 h-12">
+            <TabsTrigger value="CHW" className="px-8 font-bold data-[state=active]:bg-white data-[state=active]:text-primary">CHWs</TabsTrigger>
+            <TabsTrigger value="Doctor" className="px-8 font-bold data-[state=active]:bg-white data-[state=active]:text-primary">Doctors</TabsTrigger>
+            <TabsTrigger value="Health Officer" className="px-8 font-bold data-[state=active]:bg-white data-[state=active]:text-primary">Health Officers</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="CHW" className="animate-in fade-in zoom-in-95 duration-300">
+            <UserTable users={filterUsers("CHW")} />
+          </TabsContent>
+          
+          <TabsContent value="Doctor" className="animate-in fade-in zoom-in-95 duration-300">
+            <UserTable users={filterUsers("Doctor")} />
+          </TabsContent>
+          
+          <TabsContent value="Health Officer" className="animate-in fade-in zoom-in-95 duration-300">
+            <UserTable users={filterUsers("Health Officer")} />
+          </TabsContent>
+        </Tabs>
+      )}
     </div>
+  );
+}
+
+export default function UserManagementPage() {
+  return (
+    <Suspense fallback={<div className="flex items-center justify-center h-48"><Loader2 className="animate-spin h-8 w-8 text-primary" /></div>}>
+      <UserManagementContent />
+    </Suspense>
   );
 }
