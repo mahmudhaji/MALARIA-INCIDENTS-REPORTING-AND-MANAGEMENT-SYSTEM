@@ -1,0 +1,17 @@
+
+{
+  "placeholderImages": [
+    {
+      "id": "hero-health",
+      "description": "Healthcare workers in a clinical setting",
+      "imageUrl": "https://picsum.photos/seed/patamalaria1/1200/800",
+      "imageHint": "healthcare worker"
+    },
+    {
+      "id": "malaria-map",
+      "description": "Geospatial data visualization",
+      "imageUrl": "https://picsum.photos/seed/patamalaria2/800/600",
+      "imageHint": "geographic map"
+    }
+  ]
+}
