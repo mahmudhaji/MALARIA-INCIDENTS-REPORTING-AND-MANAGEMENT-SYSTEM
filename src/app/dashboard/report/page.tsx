@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/select";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { FileText, MapPin, User, Activity } from "lucide-react";
+import { FileText, MapPin, User, Activity, Loader2, CheckCircle2 } from "lucide-react";
 
 const reportSchema = z.object({
   patientName: z.string().min(2, "Name must be at least 2 characters"),
@@ -65,8 +65,9 @@ export default function ReportPage() {
     setTimeout(() => {
       console.log(values);
       toast({
-        title: "Incident Reported",
-        description: "The case has been successfully logged in the system.",
+        title: "Incident Successfully Reported",
+        description: `New case for ${values.patientName} has been logged and assigned Case ID: CSE-${Math.floor(Math.random() * 9000) + 1000}`,
+        className: "bg-green-600 text-white border-none",
       });
       form.reset();
       setIsSubmitting(false);
@@ -76,31 +77,31 @@ export default function ReportPage() {
   return (
     <div className="max-w-3xl mx-auto space-y-8 animate-in slide-in-from-bottom-4 duration-500">
       <div className="flex flex-col gap-2">
-        <h1 className="text-3xl font-bold tracking-tight text-primary">Report Malaria Incident</h1>
-        <p className="text-muted-foreground">Complete the form below to report a new suspected or confirmed malaria case.</p>
+        <h1 className="text-3xl font-bold tracking-tight text-primary uppercase">New Field Report</h1>
+        <p className="text-muted-foreground font-medium italic">Accurate reporting saves lives. Ensure all mandatory fields marked with * are completed.</p>
       </div>
 
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-          <Card className="border-none shadow-md">
-            <CardHeader className="flex flex-row items-center gap-4">
-              <div className="p-2 bg-primary/10 rounded-full">
+          <Card className="border-none shadow-xl">
+            <CardHeader className="flex flex-row items-center gap-4 bg-primary/5 rounded-t-lg">
+              <div className="p-2 bg-primary/10 rounded-full border border-primary/20">
                 <User className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <CardTitle>Patient Information</CardTitle>
-                <CardDescription>Personal details and contact info</CardDescription>
+                <CardTitle className="text-lg">Patient Information</CardTitle>
+                <CardDescription>Demographic and identification details</CardDescription>
               </div>
             </CardHeader>
-            <CardContent className="grid gap-6 sm:grid-cols-2">
+            <CardContent className="grid gap-6 sm:grid-cols-2 pt-6">
               <FormField
                 control= {form.control}
                 name="patientName"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Full Name</FormLabel>
+                    <FormLabel className="font-bold text-slate-600">Full Name *</FormLabel>
                     <FormControl>
-                      <Input placeholder="Enter patient name" {...field} />
+                      <Input placeholder="Enter patient full name" {...field} className="bg-slate-50 border-slate-200" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -111,9 +112,9 @@ export default function ReportPage() {
                 name="age"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Age</FormLabel>
+                    <FormLabel className="font-bold text-slate-600">Age *</FormLabel>
                     <FormControl>
-                      <Input type="number" {...field} />
+                      <Input type="number" {...field} className="bg-slate-50 border-slate-200" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -124,10 +125,10 @@ export default function ReportPage() {
                 name="gender"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Gender</FormLabel>
+                    <FormLabel className="font-bold text-slate-600">Gender *</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger>
+                        <SelectTrigger className="bg-slate-50 border-slate-200">
                           <SelectValue placeholder="Select gender" />
                         </SelectTrigger>
                       </FormControl>
@@ -146,9 +147,9 @@ export default function ReportPage() {
                 name="contactNumber"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Contact Number</FormLabel>
+                    <FormLabel className="font-bold text-slate-600">Contact Number</FormLabel>
                     <FormControl>
-                      <Input placeholder="+254..." {...field} />
+                      <Input placeholder="+254..." {...field} className="bg-slate-50 border-slate-200" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -157,25 +158,25 @@ export default function ReportPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-md">
-            <CardHeader className="flex flex-row items-center gap-4">
-              <div className="p-2 bg-primary/10 rounded-full">
+          <Card className="border-none shadow-xl">
+            <CardHeader className="flex flex-row items-center gap-4 bg-primary/5 rounded-t-lg">
+              <div className="p-2 bg-primary/10 rounded-full border border-primary/20">
                 <MapPin className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <CardTitle>Location Details</CardTitle>
-                <CardDescription>Geographic location of the incident</CardDescription>
+                <CardTitle className="text-lg">Location Details</CardTitle>
+                <CardDescription>Precise location of the incident report</CardDescription>
               </div>
             </CardHeader>
-            <CardContent className="grid gap-6 sm:grid-cols-2">
+            <CardContent className="grid gap-6 sm:grid-cols-2 pt-6">
               <FormField
                 control={form.control}
                 name="area"
                 render={({ field }) => (
                   <FormItem className="sm:col-span-2">
-                    <FormLabel>Area / Village Name</FormLabel>
+                    <FormLabel className="font-bold text-slate-600">Area / Sub-county *</FormLabel>
                     <FormControl>
-                      <Input placeholder="e.g. Kibera Village 4" {...field} />
+                      <Input placeholder="e.g. Kibera Village 4, Nairobi" {...field} className="bg-slate-50 border-slate-200" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -186,9 +187,9 @@ export default function ReportPage() {
                 name="latitude"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Latitude</FormLabel>
+                    <FormLabel className="font-bold text-slate-600">Latitude</FormLabel>
                     <FormControl>
-                      <Input type="number" step="any" {...field} />
+                      <Input type="number" step="any" {...field} className="bg-slate-50 border-slate-200" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -199,9 +200,9 @@ export default function ReportPage() {
                 name="longitude"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Longitude</FormLabel>
+                    <FormLabel className="font-bold text-slate-600">Longitude</FormLabel>
                     <FormControl>
-                      <Input type="number" step="any" {...field} />
+                      <Input type="number" step="any" {...field} className="bg-slate-50 border-slate-200" />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -210,31 +211,31 @@ export default function ReportPage() {
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-md">
-            <CardHeader className="flex flex-row items-center gap-4">
-              <div className="p-2 bg-primary/10 rounded-full">
+          <Card className="border-none shadow-xl">
+            <CardHeader className="flex flex-row items-center gap-4 bg-primary/5 rounded-t-lg">
+              <div className="p-2 bg-primary/10 rounded-full border border-primary/20">
                 <Activity className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <CardTitle>Clinical Presentation</CardTitle>
-                <CardDescription>Symptoms and initial test results</CardDescription>
+                <CardTitle className="text-lg">Clinical Overview</CardTitle>
+                <CardDescription>Reported symptoms and initial screening</CardDescription>
               </div>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 pt-6">
               <FormField
                 control={form.control}
                 name="symptoms"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Reported Symptoms</FormLabel>
+                    <FormLabel className="font-bold text-slate-600">Reported Symptoms *</FormLabel>
                     <FormControl>
                       <Textarea 
-                        placeholder="List symptoms separated by commas..." 
-                        className="min-h-[100px]"
+                        placeholder="e.g. High fever, persistent chills, headache, joint pain..." 
+                        className="min-h-[120px] bg-slate-50 border-slate-200"
                         {...field} 
                       />
                     </FormControl>
-                    <FormDescription>Include onset time if known.</FormDescription>
+                    <FormDescription>Mention any significant medical history or onset time.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}
@@ -244,17 +245,17 @@ export default function ReportPage() {
                 name="testResult"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Rapid Test / Microscopy Result</FormLabel>
+                    <FormLabel className="font-bold text-slate-600">Rapid Diagnostic Test (RDT) Result</FormLabel>
                     <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Status" />
+                        <SelectTrigger className="bg-slate-50 border-slate-200">
+                          <SelectValue placeholder="Select test outcome" />
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="Positive">Positive</SelectItem>
-                        <SelectItem value="Negative">Negative</SelectItem>
-                        <SelectItem value="Pending">Pending / Not Done</SelectItem>
+                        <SelectItem value="Positive">Positive (+)</SelectItem>
+                        <SelectItem value="Negative">Negative (-)</SelectItem>
+                        <SelectItem value="Pending">Pending / Not Conducted</SelectItem>
                       </SelectContent>
                     </Select>
                     <FormMessage />
@@ -264,10 +265,14 @@ export default function ReportPage() {
             </CardContent>
           </Card>
 
-          <div className="flex justify-end gap-4">
-            <Button variant="outline" type="button" onClick={() => form.reset()}>Cancel</Button>
-            <Button type="submit" className="px-8" disabled={isSubmitting}>
-              {isSubmitting ? "Submitting..." : "Report Incident"}
+          <div className="flex justify-end gap-4 pb-12">
+            <Button variant="outline" type="button" size="lg" className="px-10 font-bold border-slate-200 text-slate-600 hover:bg-slate-50" onClick={() => form.reset()}>Clear Form</Button>
+            <Button type="submit" size="lg" className="px-10 font-bold shadow-lg bg-primary hover:bg-primary/90" disabled={isSubmitting}>
+              {isSubmitting ? (
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting Report...</>
+              ) : (
+                <><CheckCircle2 className="mr-2 h-4 w-4" /> Submit Report</>
+              )}
             </Button>
           </div>
         </form>
