@@ -27,18 +27,18 @@ export default function Home() {
     setIsLoading(true);
     setError(null);
 
-    // Artificial delay for better UX
+    // Snappy verification (200ms)
     setTimeout(() => {
       const user = login(username, password);
       if (user) {
         toast({
           title: "Login Successful",
-          description: `Welcome back, ${user.name}! Accessing ${user.role} dashboard.`,
+          description: `Welcome back, ${user.name}!`,
           className: "bg-primary text-white",
         });
         router.push("/dashboard");
       } else {
-        setError("Unidentified credentials. Please check your username and password and try again.");
+        setError("Unidentified credentials. Please check your username and password.");
         toast({
           variant: "destructive",
           title: "Authentication Failed",
@@ -46,12 +46,12 @@ export default function Home() {
         });
         setIsLoading(false);
       }
-    }, 800);
+    }, 200);
   };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-100 p-4">
-      <div className="max-w-md w-full space-y-8 animate-in fade-in zoom-in duration-500">
+      <div className="max-w-md w-full space-y-8 animate-in fade-in zoom-in duration-300">
         <div className="text-center space-y-4">
           <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-white shadow-xl border-4 border-primary/10 mb-2">
             <svg viewBox="0 0 100 100" className="w-12 h-12">
@@ -106,13 +106,7 @@ export default function Home() {
                   <Link 
                     href="#" 
                     className="text-xs text-primary hover:underline font-semibold"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      toast({
-                        title: "Account Recovery",
-                        description: "Please contact your system administrator to reset your password.",
-                      });
-                    }}
+                    onClick={(e) => e.preventDefault()}
                   >
                     Forgot Password?
                   </Link>
@@ -136,7 +130,7 @@ export default function Home() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-3.5 text-slate-400 hover:text-slate-600 transition-colors"
+                    className="absolute right-3 top-3.5 text-slate-400 hover:text-slate-600"
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>
@@ -146,17 +140,8 @@ export default function Home() {
                 {isLoading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Signing in...</> : "Sign In"}
               </Button>
             </form>
-            <div className="text-center pt-2">
-              <Link href="#" className="text-sm text-primary font-medium hover:underline">Trouble signing in? Contact IT Support</Link>
-            </div>
           </CardContent>
         </Card>
-        
-        <div className="flex justify-center gap-4 text-[10px] text-slate-400 font-bold uppercase tracking-wider">
-          <span>Security Compliant</span>
-          <span>•</span>
-          <span>Region V1.4</span>
-        </div>
       </div>
     </div>
   );

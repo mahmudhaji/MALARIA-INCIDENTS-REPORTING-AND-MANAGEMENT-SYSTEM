@@ -68,6 +68,7 @@ export default function ReportPage() {
   function onSubmit(values: z.infer<typeof reportSchema>) {
     setIsSubmitting(true);
     
+    // Faster response time (400ms instead of 1500ms)
     setTimeout(() => {
       const caseId = `CSE-${Math.floor(Math.random() * 9000) + 1000}`;
       const newCase: MalariaCase = {
@@ -91,13 +92,13 @@ export default function ReportPage() {
       form.reset();
       setIsSubmitting(false);
       
-      // Redirect to cases registry to show the table area with the new data
+      // Redirect to cases registry
       router.push("/dashboard/cases");
-    }, 1500);
+    }, 400);
   }
 
   return (
-    <div className="max-w-3xl mx-auto space-y-8 animate-in slide-in-from-bottom-4 duration-500">
+    <div className="max-w-3xl mx-auto space-y-8 animate-in slide-in-from-bottom-2 duration-300">
       <div className="flex flex-col gap-2">
         <h1 className="text-3xl font-bold tracking-tight text-primary uppercase">New Field Report</h1>
         <p className="text-muted-foreground font-medium italic">Accurate reporting saves lives. Ensure all mandatory fields marked with * are completed.</p>
@@ -291,7 +292,7 @@ export default function ReportPage() {
             <Button variant="outline" type="button" size="lg" className="px-10 font-bold border-slate-200 text-slate-600 hover:bg-slate-50" onClick={() => form.reset()}>Clear Form</Button>
             <Button type="submit" size="lg" className="px-10 font-bold shadow-lg bg-primary hover:bg-primary/90" disabled={isSubmitting}>
               {isSubmitting ? (
-                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting Report...</>
+                <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Submitting...</>
               ) : (
                 <><CheckCircle2 className="mr-2 h-4 w-4" /> Submit Report</>
               )}

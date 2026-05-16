@@ -103,6 +103,7 @@ export default function CaseManagementPage() {
     if (!editingCase) return;
     setIsSubmitting(true);
     
+    // Faster response time (300ms instead of 800ms)
     setTimeout(() => {
       const updated = updateCase(editingCase);
       setCases(updated);
@@ -113,7 +114,7 @@ export default function CaseManagementPage() {
       });
       setIsSubmitting(false);
       setIsEditDialogOpen(false);
-    }, 800);
+    }, 300);
   };
 
   const toggleStatus = (id: string, currentStatus: string) => {
@@ -132,7 +133,7 @@ export default function CaseManagementPage() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-500">
+    <div className="space-y-8 animate-in fade-in duration-300">
       <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
         <div>
           <h1 className="text-3xl font-bold tracking-tight text-primary uppercase">Case Registry</h1>
@@ -242,7 +243,7 @@ export default function CaseManagementPage() {
       <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
         <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden">
           {viewingCase && (
-            <div className="animate-in fade-in duration-300">
+            <div className="animate-in fade-in duration-200">
               <div className="bg-primary p-6 text-white">
                 <DialogHeader>
                   <div className="flex justify-between items-start">

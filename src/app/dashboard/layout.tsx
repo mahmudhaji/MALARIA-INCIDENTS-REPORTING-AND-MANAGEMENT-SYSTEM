@@ -26,12 +26,13 @@ export default function DashboardLayout({
     }
   }, [router]);
 
+  // Only show the blocking loader on initial mount if not authenticated
   if (isAuthenticated === null) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="h-10 w-10 animate-spin text-primary" />
-          <p className="text-sm font-medium text-muted-foreground uppercase tracking-widest">Verifying Session...</p>
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Initialising...</p>
         </div>
       </div>
     );
