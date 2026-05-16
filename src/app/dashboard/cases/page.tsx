@@ -1,8 +1,8 @@
 
 "use client";
 
-import { useState } from "react";
-import { MOCK_CASES as INITIAL_CASES } from "@/lib/mock-data";
+import { useState, useEffect } from "react";
+import { getCases, updateCase, deleteCase } from "@/lib/case-store";
 import { 
   Table, 
   TableBody, 
@@ -48,14 +48,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { MalariaCase } from "@/lib/types";
 
 export default function CaseManagementPage() {
   const { toast } = useToast();
-  const [cases, setCases] = useState(INITIAL_CASES);
+  const [cases, setCases] = useState<MalariaCase[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [editingCase, setEditingCase] = useState<any>(null);
+  const [editingCase, setEditingCase] = useState<MalariaCase | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useEffect(() => {
+    setCases(getCases());
+  }, []);
 
   const filteredCases = cases.filter(c => 
     c.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -64,9 +69,9 @@ export default function CaseManagementPage() {
   );
 
   const handleDeleteCase = (id: string, name: string) => {
-    // In a real app, this would be an AlertDialog, but for prototype we use confirmation
     if (confirm(`Are you sure you want to archive the case for ${name}?`)) {
-      setCases(cases.filter(c => c.id !== id));
+      const updated = deleteCase(id);
+      setCases(updated);
       toast({
         title: "Action Successful",
         description: `Case ${id} (${name}) has been archived.`,
@@ -75,17 +80,19 @@ export default function CaseManagementPage() {
     }
   };
 
-  const handleEditClick = (caseItem: any) => {
+  const handleEditClick = (caseItem: MalariaCase) => {
     setEditingCase({ ...caseItem });
     setIsEditDialogOpen(true);
   };
 
   const handleUpdateCase = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!editingCase) return;
     setIsSubmitting(true);
     
     setTimeout(() => {
-      setCases(cases.map(c => c.id === editingCase.id ? editingCase : c));
+      const updated = updateCase(editingCase);
+      setCases(updated);
       toast({
         title: "Success",
         description: `Medical records for ${editingCase.patientName} have been updated.`,
@@ -97,8 +104,13 @@ export default function CaseManagementPage() {
   };
 
   const toggleStatus = (id: string, currentStatus: string) => {
+    const caseToUpdate = cases.find(c => c.id === id);
+    if (!caseToUpdate) return;
+
     const nextStatus = currentStatus === 'Recovered' ? 'Under Treatment' : 'Recovered';
-    setCases(cases.map(c => c.id === id ? { ...c, status: nextStatus as any } : c));
+    const updated = updateCase({ ...caseToUpdate, status: nextStatus as any });
+    setCases(updated);
+    
     toast({
       title: "Status Updated",
       description: `Case ${id} status moved to ${nextStatus}.`,
@@ -216,72 +228,74 @@ export default function CaseManagementPage() {
       {/* Edit Case Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
         <DialogContent className="sm:max-w-[500px]">
-          <form onSubmit={handleUpdateCase}>
-            <DialogHeader>
-              <DialogTitle className="text-primary flex items-center gap-2">
-                <Edit2 className="h-5 w-5" />
-                Edit Patient Record
-              </DialogTitle>
-              <DialogDescription>
-                Modify details for Case {editingCase?.id}. All changes are logged for audit.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-6">
-              <div className="grid gap-2">
-                <Label htmlFor="edit-name">Patient Full Name</Label>
-                <Input 
-                  id="edit-name" 
-                  value={editingCase?.patientName || ""} 
-                  onChange={(e) => setEditingCase({...editingCase, patientName: e.target.value})}
-                  required 
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
+          {editingCase && (
+            <form onSubmit={handleUpdateCase}>
+              <DialogHeader>
+                <DialogTitle className="text-primary flex items-center gap-2">
+                  <Edit2 className="h-5 w-5" />
+                  Edit Patient Record
+                </DialogTitle>
+                <DialogDescription>
+                  Modify details for Case {editingCase.id}. All changes are logged for audit.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="grid gap-4 py-6">
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-age">Age</Label>
+                  <Label htmlFor="edit-name">Patient Full Name</Label>
                   <Input 
-                    id="edit-age" 
-                    type="number" 
-                    value={editingCase?.age || 0} 
-                    onChange={(e) => setEditingCase({...editingCase, age: Number(e.target.value)})}
+                    id="edit-name" 
+                    value={editingCase.patientName} 
+                    onChange={(e) => setEditingCase({...editingCase, patientName: e.target.value})}
                     required 
                   />
                 </div>
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-age">Age</Label>
+                    <Input 
+                      id="edit-age" 
+                      type="number" 
+                      value={editingCase.age} 
+                      onChange={(e) => setEditingCase({...editingCase, age: Number(e.target.value)})}
+                      required 
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-status">Current Status</Label>
+                    <Select 
+                      value={editingCase.status} 
+                      onValueChange={(val: any) => setEditingCase({...editingCase, status: val})}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Status" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="Reported">Reported</SelectItem>
+                        <SelectItem value="Under Treatment">Under Treatment</SelectItem>
+                        <SelectItem value="Recovered">Recovered</SelectItem>
+                        <SelectItem value="Deceased">Deceased</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
                 <div className="grid gap-2">
-                  <Label htmlFor="edit-status">Current Status</Label>
-                  <Select 
-                    value={editingCase?.status} 
-                    onValueChange={(val) => setEditingCase({...editingCase, status: val})}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Status" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Reported">Reported</SelectItem>
-                      <SelectItem value="Under Treatment">Under Treatment</SelectItem>
-                      <SelectItem value="Recovered">Recovered</SelectItem>
-                      <SelectItem value="Deceased">Deceased</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="edit-area">Area / Region</Label>
+                  <Input 
+                    id="edit-area" 
+                    value={editingCase.area} 
+                    onChange={(e) => setEditingCase({...editingCase, area: e.target.value})}
+                    required 
+                  />
                 </div>
               </div>
-              <div className="grid gap-2">
-                <Label htmlFor="edit-area">Area / Region</Label>
-                <Input 
-                  id="edit-area" 
-                  value={editingCase?.area || ""} 
-                  onChange={(e) => setEditingCase({...editingCase, area: e.target.value})}
-                  required 
-                />
-              </div>
-            </div>
-            <DialogFooter>
-              <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
-              <Button type="submit" disabled={isSubmitting} className="bg-primary hover:bg-primary/90">
-                {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Updating...</> : "Save Changes"}
-              </Button>
-            </DialogFooter>
-          </form>
+              <DialogFooter>
+                <Button type="button" variant="outline" onClick={() => setIsEditDialogOpen(false)}>Cancel</Button>
+                <Button type="submit" disabled={isSubmitting} className="bg-primary hover:bg-primary/90">
+                  {isSubmitting ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Updating...</> : "Save Changes"}
+                </Button>
+              </DialogFooter>
+            </form>
+          )}
         </DialogContent>
       </Dialog>
     </div>

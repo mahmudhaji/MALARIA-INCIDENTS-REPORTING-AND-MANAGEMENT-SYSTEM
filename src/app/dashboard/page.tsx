@@ -1,3 +1,7 @@
+
+"use client";
+
+import { useEffect, useState } from "react";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { 
   Table, 
@@ -8,37 +12,56 @@ import {
   TableRow 
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { MOCK_STATS, MOCK_CASES } from "@/lib/mock-data";
+import { getCases } from "@/lib/case-store";
+import { getCurrentUser } from "@/lib/auth-store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { MalariaCase } from "@/lib/types";
 
 export default function DashboardPage() {
+  const [cases, setCases] = useState<MalariaCase[]>([]);
+  const currentUser = getCurrentUser();
+
+  useEffect(() => {
+    setCases(getCases());
+  }, []);
+
+  const stats = {
+    total: cases.length,
+    pending: cases.filter(c => c.status === 'Reported').length,
+    treated: cases.filter(c => c.status === 'Recovered').length,
+    active: cases.filter(c => c.status === 'Under Treatment').length
+  };
+
+  const recentCases = cases.slice(0, 5);
+
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-800">Welcome, Sarah (Health Officer)</h1>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-800">Welcome, {currentUser?.name || "User"} ({currentUser?.role})</h1>
         <p className="text-sm text-muted-foreground">Malaria incidence surveillance summary for today.</p>
       </div>
 
       <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
         <StatCard 
           title="Total Cases Reported" 
-          value={MOCK_STATS.totalCases} 
+          value={stats.total} 
           variant="blue"
         />
         <StatCard 
           title="Pending Review" 
-          value="12" 
+          value={stats.pending} 
           variant="green"
         />
         <StatCard 
           title="Treated Cases" 
-          value={MOCK_STATS.recoveredCount} 
+          value={stats.treated} 
           variant="orange"
         />
         <StatCard 
-          title="Rejected Cases" 
-          value="0" 
+          title="Active Cases" 
+          value={stats.active} 
           variant="red"
         />
       </div>
@@ -59,7 +82,7 @@ export default function DashboardPage() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {MOCK_CASES.map((caseItem) => (
+              {recentCases.map((caseItem) => (
                 <TableRow key={caseItem.id} className="hover:bg-slate-50">
                   <TableCell className="text-sm font-medium text-slate-600">{caseItem.id}</TableCell>
                   <TableCell className="text-sm font-medium">{caseItem.patientName}</TableCell>
@@ -74,11 +97,18 @@ export default function DashboardPage() {
                       caseItem.status === 'Under Treatment' ? 'bg-orange-50 text-orange-700 border-orange-200' :
                       'bg-slate-100 text-slate-700 border-slate-200'
                     )}>
-                      {caseItem.status === 'Under Treatment' ? 'Treated' : caseItem.status}
+                      {caseItem.status}
                     </Badge>
                   </TableCell>
                 </TableRow>
               ))}
+              {recentCases.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
+                    No cases reported yet.
+                  </TableCell>
+                </TableRow>
+              )}
             </TableBody>
           </Table>
         </CardContent>
@@ -86,5 +116,3 @@ export default function DashboardPage() {
     </div>
   );
 }
-
-import { cn } from "@/lib/utils";

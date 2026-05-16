@@ -27,22 +27,26 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { FileText, MapPin, User, Activity, Loader2, CheckCircle2 } from "lucide-react";
+import { saveCase } from "@/lib/case-store";
+import { getCurrentUser } from "@/lib/auth-store";
+import { MalariaCase } from "@/lib/types";
 
 const reportSchema = z.object({
   patientName: z.string().min(2, "Name must be at least 2 characters"),
   age: z.coerce.number().min(0).max(120),
-  gender: z.string(),
+  gender: z.enum(["Male", "Female", "Other"]),
   area: z.string().min(2, "Area is required"),
   latitude: z.coerce.number(),
   longitude: z.coerce.number(),
   symptoms: z.string().min(5, "Please list at least one symptom"),
-  testResult: z.string(),
+  testResult: z.enum(["Positive", "Negative", "Pending"]),
   contactNumber: z.string().optional(),
 });
 
 export default function ReportPage() {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const currentUser = getCurrentUser();
 
   const form = useForm<z.infer<typeof reportSchema>>({
     resolver: zodResolver(reportSchema),
@@ -61,14 +65,27 @@ export default function ReportPage() {
 
   function onSubmit(values: z.infer<typeof reportSchema>) {
     setIsSubmitting(true);
-    // Simulate API call
+    
     setTimeout(() => {
-      console.log(values);
+      const caseId = `CSE-${Math.floor(Math.random() * 9000) + 1000}`;
+      const newCase: MalariaCase = {
+        id: caseId,
+        ...values,
+        symptoms: values.symptoms.split(",").map(s => s.trim()),
+        status: "Reported",
+        reportedBy: currentUser?.id || "unknown",
+        reportedAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      saveCase(newCase);
+
       toast({
         title: "Incident Successfully Reported",
-        description: `New case for ${values.patientName} has been logged and assigned Case ID: CSE-${Math.floor(Math.random() * 9000) + 1000}`,
+        description: `New case for ${values.patientName} has been logged and assigned Case ID: ${caseId}`,
         className: "bg-green-600 text-white border-none",
       });
+      
       form.reset();
       setIsSubmitting(false);
     }, 1500);
@@ -95,7 +112,7 @@ export default function ReportPage() {
             </CardHeader>
             <CardContent className="grid gap-6 sm:grid-cols-2 pt-6">
               <FormField
-                control= {form.control}
+                control={form.control}
                 name="patientName"
                 render={({ field }) => (
                   <FormItem>
@@ -235,7 +252,7 @@ export default function ReportPage() {
                         {...field} 
                       />
                     </FormControl>
-                    <FormDescription>Mention any significant medical history or onset time.</FormDescription>
+                    <FormDescription>Separate symptoms with commas.</FormDescription>
                     <FormMessage />
                   </FormItem>
                 )}

@@ -1,8 +1,8 @@
 
 "use client";
 
-import { useState } from "react";
-import { MOCK_CASES } from "@/lib/mock-data";
+import { useState, useEffect } from "react";
+import { getCases } from "@/lib/case-store";
 import { 
   Table, 
   TableBody, 
@@ -23,12 +23,18 @@ import { Badge } from "@/components/ui/badge";
 import { Search, MoreVertical, Eye, FileEdit, FileText, Filter } from "lucide-react";
 import { format } from "date-fns";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { MalariaCase } from "@/lib/types";
 
 export default function TreatmentRecordsPage() {
   const [searchTerm, setSearchTerm] = useState("");
+  const [cases, setCases] = useState<MalariaCase[]>([]);
+
+  useEffect(() => {
+    setCases(getCases());
+  }, []);
 
   // Only show cases that have treatment info or are positive
-  const treatmentRecords = MOCK_CASES.filter(c => 
+  const treatmentRecords = cases.filter(c => 
     c.testResult === 'Positive' &&
     (c.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.id.toLowerCase().includes(searchTerm.toLowerCase()))
