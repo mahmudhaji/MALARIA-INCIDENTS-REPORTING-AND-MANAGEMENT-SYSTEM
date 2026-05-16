@@ -18,7 +18,8 @@ import {
   Settings, 
   LogOut,
   ChevronDown,
-  Users
+  Users,
+  Stethoscope
 } from "lucide-react";
 import {
   Collapsible,
@@ -66,6 +67,7 @@ export function AppSidebar() {
         ...baseNav,
         { name: 'Report Case', href: '/dashboard/report', icon: PlusCircle },
         { name: 'Patient Cases', href: '/dashboard/cases', icon: ClipboardList },
+        { name: 'Treatment Form', href: '/dashboard/treatment', icon: Stethoscope },
         { name: 'Reports', href: '/dashboard/analytics', icon: BarChart3 },
       ];
     }
