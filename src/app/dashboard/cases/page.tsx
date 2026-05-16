@@ -28,7 +28,12 @@ import {
   Trash2, 
   Filter,
   Loader2,
-  CheckCircle2
+  CheckCircle2,
+  Calendar,
+  MapPin,
+  User,
+  Activity,
+  Phone
 } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
@@ -49,13 +54,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { MalariaCase } from "@/lib/types";
+import { Separator } from "@/components/ui/separator";
 
 export default function CaseManagementPage() {
   const { toast } = useToast();
   const [cases, setCases] = useState<MalariaCase[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [editingCase, setEditingCase] = useState<MalariaCase | null>(null);
+  const [viewingCase, setViewingCase] = useState<MalariaCase | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
@@ -83,6 +91,11 @@ export default function CaseManagementPage() {
   const handleEditClick = (caseItem: MalariaCase) => {
     setEditingCase({ ...caseItem });
     setIsEditDialogOpen(true);
+  };
+
+  const handleViewClick = (caseItem: MalariaCase) => {
+    setViewingCase(caseItem);
+    setIsViewDialogOpen(true);
   };
 
   const handleUpdateCase = (e: React.FormEvent) => {
@@ -194,7 +207,7 @@ export default function CaseManagementPage() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-48">
-                      <DropdownMenuItem onClick={() => toast({ title: "View Mode", description: "Loading high-resolution case file..." })}>
+                      <DropdownMenuItem onClick={() => handleViewClick(caseItem)}>
                         <Eye className="mr-2 h-4 w-4 text-blue-500" /> View File
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => handleEditClick(caseItem)}>
@@ -224,6 +237,134 @@ export default function CaseManagementPage() {
           </TableBody>
         </Table>
       </div>
+
+      {/* View Case Dialog */}
+      <Dialog open={isViewDialogOpen} onOpenChange={setIsViewDialogOpen}>
+        <DialogContent className="sm:max-w-[600px] p-0 overflow-hidden">
+          {viewingCase && (
+            <div className="animate-in fade-in duration-300">
+              <div className="bg-primary p-6 text-white">
+                <DialogHeader>
+                  <div className="flex justify-between items-start">
+                    <div>
+                      <DialogTitle className="text-2xl font-bold flex items-center gap-2 text-white">
+                        <Eye className="h-6 w-6" />
+                        Patient Case File
+                      </DialogTitle>
+                      <DialogDescription className="text-blue-100 mt-1">
+                        Detailed overview for Case {viewingCase.id}
+                      </DialogDescription>
+                    </div>
+                    <Badge variant="secondary" className="bg-white text-primary font-bold px-3 py-1">
+                      {viewingCase.status}
+                    </Badge>
+                  </div>
+                </DialogHeader>
+              </div>
+
+              <div className="p-6 space-y-6">
+                <div className="grid grid-cols-2 gap-8">
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-slate-100 rounded-lg">
+                        <User className="h-4 w-4 text-slate-600" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Patient Name</p>
+                        <p className="text-sm font-bold text-slate-800">{viewingCase.patientName}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-slate-100 rounded-lg">
+                        <Calendar className="h-4 w-4 text-slate-600" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Demographics</p>
+                        <p className="text-sm font-bold text-slate-800">{viewingCase.age} Years | {viewingCase.gender}</p>
+                      </div>
+                    </div>
+                    {viewingCase.contactNumber && (
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-slate-100 rounded-lg">
+                          <Phone className="h-4 w-4 text-slate-600" />
+                        </div>
+                        <div>
+                          <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Contact</p>
+                          <p className="text-sm font-bold text-slate-800">{viewingCase.contactNumber}</p>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="space-y-4">
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-slate-100 rounded-lg">
+                        <MapPin className="h-4 w-4 text-slate-600" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Location</p>
+                        <p className="text-sm font-bold text-slate-800">{viewingCase.area}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="p-2 bg-slate-100 rounded-lg">
+                        <Activity className="h-4 w-4 text-slate-600" />
+                      </div>
+                      <div>
+                        <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider">Test Result</p>
+                        <Badge variant={viewingCase.testResult === 'Positive' ? 'destructive' : 'secondary'} className="h-5 text-[10px] font-bold">
+                          {viewingCase.testResult}
+                        </Badge>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <Separator />
+
+                <div className="space-y-3">
+                  <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-wider flex items-center gap-2">
+                    <Activity className="h-3 w-3" /> Reported Symptoms
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {viewingCase.symptoms.map((symptom, idx) => (
+                      <Badge key={idx} variant="outline" className="bg-slate-50 border-slate-200 text-slate-700 py-1">
+                        {symptom}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                {viewingCase.treatment && (
+                  <div className="bg-blue-50/50 border border-blue-100 rounded-xl p-4">
+                    <p className="text-[10px] uppercase font-bold text-blue-700 tracking-wider mb-2">Prescribed Treatment</p>
+                    <p className="text-sm font-medium text-slate-800">{viewingCase.treatment}</p>
+                  </div>
+                )}
+
+                <div className="grid grid-cols-2 gap-4 text-[10px] text-muted-foreground bg-slate-50 p-3 rounded-lg border">
+                  <div>
+                    <span className="font-bold">Reported By:</span> {viewingCase.reportedBy}
+                  </div>
+                  <div className="text-right">
+                    <span className="font-bold">Last Updated:</span> {format(new Date(viewingCase.updatedAt), "PPP p")}
+                  </div>
+                </div>
+              </div>
+
+              <DialogFooter className="p-6 bg-slate-50 border-t">
+                <Button variant="outline" className="font-bold" onClick={() => setIsViewDialogOpen(false)}>Close Record</Button>
+                <Button className="font-bold" onClick={() => {
+                  setIsViewDialogOpen(false);
+                  handleEditClick(viewingCase);
+                }}>
+                  <Edit2 className="h-4 w-4 mr-2" /> Modify Record
+                </Button>
+              </DialogFooter>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Case Dialog */}
       <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
