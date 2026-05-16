@@ -36,28 +36,28 @@ import { UserPlus, Search, Edit2, Trash2, Loader2, ArrowLeft } from "lucide-reac
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
 
-const MOCK_USERS_LIST = [
-  { username: "asha01", fullName: "Asha Hamisi", role: "CHW", status: "Active", email: "asha@health.go.ke" },
-  { username: "peter01", fullName: "Dr. Peter John", role: "Doctor", status: "Active", email: "peter@health.go.ke" },
-  { username: "officer01", fullName: "Grace Mollel", role: "Health Officer", status: "Active", email: "grace@health.go.ke" },
-  { username: "admin01", fullName: "System Admin", role: "Administrator", status: "Active", email: "admin@health.go.ke" },
-  { username: "jane_chw", fullName: "Jane Mukuwi", role: "CHW", status: "Active", email: "jane@health.go.ke" },
-  { username: "doctor_smith", fullName: "Dr. Alice Smith", role: "Doctor", status: "Active", email: "alice@health.go.ke" },
-  { username: "karanja_h", fullName: "Karanja Health", role: "Health Officer", status: "Active", email: "karanja@health.go.ke" },
+const INITIAL_USERS = [
+  { id: "1", username: "asha01", fullName: "Asha Hamisi", role: "CHW", status: "Active", email: "asha@health.go.ke" },
+  { id: "2", username: "peter01", fullName: "Dr. Peter John", role: "Doctor", status: "Active", email: "peter@health.go.ke" },
+  { id: "3", username: "officer01", fullName: "Grace Mollel", role: "Health Officer", status: "Active", email: "grace@health.go.ke" },
+  { id: "4", username: "admin01", fullName: "System Admin", role: "Administrator", status: "Active", email: "admin@health.go.ke" },
+  { id: "5", username: "jane_chw", fullName: "Jane Mukuwi", role: "CHW", status: "Active", email: "jane@health.go.ke" },
+  { id: "6", username: "doctor_smith", fullName: "Dr. Alice Smith", role: "Doctor", status: "Active", email: "alice@health.go.ke" },
+  { id: "7", username: "karanja_h", fullName: "Karanja Health", role: "Health Officer", status: "Active", email: "karanja@health.go.ke" },
 ];
 
 function UserManagementContent() {
   const { toast } = useToast();
   const searchParams = useSearchParams();
-  const roleFilter = searchParams.get('role'); // e.g., "Doctor"
+  const roleFilter = searchParams.get('role');
   
+  const [users, setUsers] = useState(INITIAL_USERS);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState(roleFilter || "CHW");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [editingUser, setEditingUser] = useState<any>(null);
 
-  // Form State
   const [formData, setFormData] = useState({
     username: "",
     fullName: "",
@@ -74,7 +74,7 @@ function UserManagementContent() {
   }, [roleFilter]);
 
   const filterUsers = (role: string) => {
-    return MOCK_USERS_LIST.filter(user => 
+    return users.filter(user => 
       user.role === role && 
       (user.fullName.toLowerCase().includes(searchTerm.toLowerCase()) || 
        user.username.toLowerCase().includes(searchTerm.toLowerCase()))
@@ -108,18 +108,43 @@ function UserManagementContent() {
     e.preventDefault();
     setIsSubmitting(true);
     
-    // Simulate API call
     setTimeout(() => {
-      toast({
-        title: editingUser ? "User Updated" : "User Added",
-        description: `${formData.fullName} has been ${editingUser ? 'updated' : 'added'} to the system.`,
-      });
+      if (editingUser) {
+        setUsers(users.map(u => u.id === editingUser.id ? { ...u, ...formData } : u));
+        toast({
+          title: "User Updated",
+          description: `${formData.fullName}'s profile has been updated successfully.`,
+          className: "bg-green-600 text-white",
+        });
+      } else {
+        const newUser = {
+          id: Math.random().toString(36).substr(2, 9),
+          ...formData
+        };
+        setUsers([newUser, ...users]);
+        toast({
+          title: "User Created",
+          description: `${formData.fullName} has been added to the system.`,
+          className: "bg-green-600 text-white",
+        });
+      }
       setIsSubmitting(false);
       setIsFormOpen(false);
-    }, 1000);
+    }, 800);
   };
 
-  const UserTable = ({ users }: { users: typeof MOCK_USERS_LIST }) => (
+  const handleDeleteUser = (id: string, name: string) => {
+    if (confirm(`Are you sure you want to remove ${name}?`)) {
+      setUsers(users.filter(u => u.id !== id));
+      toast({
+        title: "User Deleted",
+        description: `${name} has been removed from the system.`,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const UserTable = ({ roleUsers }: { roleUsers: typeof INITIAL_USERS }) => (
     <div className="rounded-md border bg-white shadow-sm overflow-hidden animate-in fade-in duration-300">
       <Table>
         <TableHeader className="bg-slate-50">
@@ -132,13 +157,13 @@ function UserManagementContent() {
           </TableRow>
         </TableHeader>
         <TableBody>
-          {users.map((user) => (
-            <TableRow key={user.username} className="hover:bg-slate-50/50">
+          {roleUsers.map((user) => (
+            <TableRow key={user.id} className="hover:bg-slate-50/50">
               <TableCell className="font-medium">{user.username}</TableCell>
               <TableCell>{user.fullName}</TableCell>
               <TableCell className="text-muted-foreground text-xs">{user.email}</TableCell>
               <TableCell>
-                <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
+                <Badge variant="outline" className={user.status === 'Active' ? 'bg-green-50 text-green-700 border-green-200' : 'bg-red-50 text-red-700 border-red-200'}>
                   {user.status}
                 </Badge>
               </TableCell>
@@ -151,13 +176,18 @@ function UserManagementContent() {
                 >
                   <Edit2 className="h-3 w-3 mr-1" /> Edit
                 </Button>
-                <Button variant="outline" size="sm" className="h-8 px-3 text-red-600 border-red-200 hover:bg-red-50">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="h-8 px-3 text-red-600 border-red-200 hover:bg-red-50"
+                  onClick={() => handleDeleteUser(user.id, user.fullName)}
+                >
                   <Trash2 className="h-3 w-3 mr-1" /> Delete
                 </Button>
               </TableCell>
             </TableRow>
           ))}
-          {users.length === 0 && (
+          {roleUsers.length === 0 && (
             <TableRow>
               <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
                 No users found.
@@ -289,7 +319,7 @@ function UserManagementContent() {
 
       {roleFilter ? (
         <div className="animate-in fade-in duration-500">
-          <UserTable users={filterUsers(roleFilter)} />
+          <UserTable roleUsers={filterUsers(roleFilter)} />
         </div>
       ) : (
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -300,15 +330,15 @@ function UserManagementContent() {
           </TabsList>
           
           <TabsContent value="CHW" className="animate-in fade-in zoom-in-95 duration-300">
-            <UserTable users={filterUsers("CHW")} />
+            <UserTable roleUsers={filterUsers("CHW")} />
           </TabsContent>
           
           <TabsContent value="Doctor" className="animate-in fade-in zoom-in-95 duration-300">
-            <UserTable users={filterUsers("Doctor")} />
+            <UserTable roleUsers={filterUsers("Doctor")} />
           </TabsContent>
           
           <TabsContent value="Health Officer" className="animate-in fade-in zoom-in-95 duration-300">
-            <UserTable users={filterUsers("Health Officer")} />
+            <UserTable roleUsers={filterUsers("Health Officer")} />
           </TabsContent>
         </Tabs>
       )}

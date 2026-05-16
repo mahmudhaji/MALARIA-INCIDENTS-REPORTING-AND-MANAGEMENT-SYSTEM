@@ -2,7 +2,7 @@
 "use client";
 
 import { useState } from "react";
-import { MOCK_CASES } from "@/lib/mock-data";
+import { MOCK_CASES as INITIAL_CASES } from "@/lib/mock-data";
 import { 
   Table, 
   TableBody, 
@@ -22,15 +22,39 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Search, MoreVertical, Eye, Edit2, Trash2, Filter } from "lucide-react";
 import { format } from "date-fns";
+import { useToast } from "@/hooks/use-toast";
 
 export default function CaseManagementPage() {
+  const { toast } = useToast();
+  const [cases, setCases] = useState(INITIAL_CASES);
   const [searchTerm, setSearchTerm] = useState("");
 
-  const filteredCases = MOCK_CASES.filter(c => 
+  const filteredCases = cases.filter(c => 
     c.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.area.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleDeleteCase = (id: string) => {
+    if (confirm("Are you sure you want to archive this case?")) {
+      setCases(cases.filter(c => c.id !== id));
+      toast({
+        title: "Case Archived",
+        description: `Case ${id} has been moved to the archive.`,
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleUpdateStatus = (id: string, currentStatus: string) => {
+    const nextStatus = currentStatus === 'Recovered' ? 'Under Treatment' : 'Recovered';
+    setCases(cases.map(c => c.id === id ? { ...c, status: nextStatus as any } : c));
+    toast({
+      title: "Status Updated",
+      description: `Case ${id} status updated to ${nextStatus}.`,
+      className: "bg-primary text-white"
+    });
+  };
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -108,13 +132,13 @@ export default function CaseManagementPage() {
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => toast({ title: "Viewing Case", description: `Loading details for ${caseItem.id}...` })}>
                         <Eye className="mr-2 h-4 w-4" /> View Details
                       </DropdownMenuItem>
-                      <DropdownMenuItem>
-                        <Edit2 className="mr-2 h-4 w-4" /> Update Status
+                      <DropdownMenuItem onClick={() => handleUpdateStatus(caseItem.id, caseItem.status)}>
+                        <Edit2 className="mr-2 h-4 w-4" /> Toggle Status
                       </DropdownMenuItem>
-                      <DropdownMenuItem className="text-destructive">
+                      <DropdownMenuItem className="text-destructive" onClick={() => handleDeleteCase(caseItem.id)}>
                         <Trash2 className="mr-2 h-4 w-4" /> Archive Case
                       </DropdownMenuItem>
                     </DropdownMenuContent>
