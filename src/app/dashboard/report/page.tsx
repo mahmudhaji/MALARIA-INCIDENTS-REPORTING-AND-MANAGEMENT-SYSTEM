@@ -2,6 +2,7 @@
 "use client";
 
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import * as z from "zod";
@@ -45,6 +46,7 @@ const reportSchema = z.object({
 
 export default function ReportPage() {
   const { toast } = useToast();
+  const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const currentUser = getCurrentUser();
 
@@ -88,6 +90,9 @@ export default function ReportPage() {
       
       form.reset();
       setIsSubmitting(false);
+      
+      // Redirect to cases registry to show the table area with the new data
+      router.push("/dashboard/cases");
     }, 1500);
   }
 
