@@ -97,6 +97,7 @@ export function AppSidebar() {
             { name: 'Health Officers', href: '/dashboard/users?role=Health%20Officer' },
           ]
         },
+        { name: 'Treatment Records', href: '/dashboard/treatment/records', icon: FileText },
         { name: 'System Alerts', href: '/dashboard/alerts', icon: Bell },
         { name: 'Settings', href: '/dashboard/settings', icon: Settings },
       ];
