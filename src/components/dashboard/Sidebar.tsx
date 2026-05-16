@@ -78,6 +78,7 @@ export function AppSidebar() {
       return [
         ...baseNav,
         { name: 'Incident Map', href: '/dashboard/map', icon: MapIcon },
+        { name: 'Treatment Records', href: '/dashboard/treatment/records', icon: FileText },
         { name: 'Data Analysis', href: '/dashboard/analytics', icon: BarChart3 },
         { name: 'Notifications', href: '/dashboard/alerts', icon: Bell },
       ];
