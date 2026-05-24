@@ -33,7 +33,8 @@ import {
   MapPin,
   User,
   Activity,
-  Phone
+  Phone,
+  FileDown
 } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/hooks/use-toast";
@@ -55,6 +56,7 @@ import {
 } from "@/components/ui/select";
 import { MalariaCase } from "@/lib/types";
 import { Separator } from "@/components/ui/separator";
+import { exportCasesToPDF, exportSingleCasePDF } from "@/lib/pdf-export";
 
 export default function CaseManagementPage() {
   const { toast } = useToast();
@@ -65,6 +67,7 @@ export default function CaseManagementPage() {
   const [editingCase, setEditingCase] = useState<MalariaCase | null>(null);
   const [viewingCase, setViewingCase] = useState<MalariaCase | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
     setCases(getCases());
@@ -75,6 +78,22 @@ export default function CaseManagementPage() {
     c.id.toLowerCase().includes(searchTerm.toLowerCase()) ||
     c.area.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  const handleExportAll = async () => {
+    if (filteredCases.length === 0) {
+      toast({ title: "No data to export", variant: "destructive" });
+      return;
+    }
+    setIsExporting(true);
+    await exportCasesToPDF(filteredCases, "Registry Submission Report");
+    setIsExporting(false);
+    toast({ title: "Export Complete", description: "Your PDF report has been downloaded." });
+  };
+
+  const handleExportSingle = (caseItem: MalariaCase) => {
+    exportSingleCasePDF(caseItem);
+    toast({ title: "Export Complete", description: `Medical file for ${caseItem.id} downloaded.` });
+  };
 
   const handleDeleteCase = (id: string, name: string) => {
     if (confirm(`Are you sure you want to archive the case for ${name}?`)) {
@@ -103,7 +122,6 @@ export default function CaseManagementPage() {
     if (!editingCase) return;
     setIsSubmitting(true);
     
-    // Faster response time (300ms instead of 800ms)
     setTimeout(() => {
       const updated = updateCase(editingCase);
       setCases(updated);
@@ -143,7 +161,10 @@ export default function CaseManagementPage() {
            <Button variant="outline" size="sm" className="font-bold border-primary/20 text-primary">
              <Filter className="mr-2 h-4 w-4" /> Filter
            </Button>
-           <Button size="sm" className="font-bold shadow-md">Export PDF Report</Button>
+           <Button size="sm" className="font-bold shadow-md" onClick={handleExportAll} disabled={isExporting}>
+             {isExporting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <FileDown className="h-4 w-4 mr-2" />}
+             Export PDF Report
+           </Button>
         </div>
       </div>
 
@@ -216,6 +237,9 @@ export default function CaseManagementPage() {
                       </DropdownMenuItem>
                       <DropdownMenuItem onClick={() => toggleStatus(caseItem.id, caseItem.status)}>
                         <CheckCircle2 className="mr-2 h-4 w-4 text-green-500" /> Toggle Status
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => handleExportSingle(caseItem)}>
+                        <FileDown className="mr-2 h-4 w-4 text-primary" /> Download PDF
                       </DropdownMenuItem>
                       <DropdownMenuItem className="text-destructive font-bold" onClick={() => handleDeleteCase(caseItem.id, caseItem.patientName)}>
                         <Trash2 className="mr-2 h-4 w-4" /> Archive Case
@@ -355,11 +379,8 @@ export default function CaseManagementPage() {
 
               <DialogFooter className="p-6 bg-slate-50 border-t">
                 <Button variant="outline" className="font-bold" onClick={() => setIsViewDialogOpen(false)}>Close Record</Button>
-                <Button className="font-bold" onClick={() => {
-                  setIsViewDialogOpen(false);
-                  handleEditClick(viewingCase);
-                }}>
-                  <Edit2 className="h-4 w-4 mr-2" /> Modify Record
+                <Button className="font-bold" onClick={() => handleExportSingle(viewingCase)}>
+                  <FileDown className="h-4 w-4 mr-2" /> Download Case PDF
                 </Button>
               </DialogFooter>
             </div>

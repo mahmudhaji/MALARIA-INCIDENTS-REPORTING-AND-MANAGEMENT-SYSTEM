@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils";
 import { MalariaCase } from "@/lib/types";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
-import { FileDown, Eye, User, Calendar, MapPin, Activity, Phone, Clock } from "lucide-react";
+import { FileDown, Eye, User, Calendar, MapPin, Activity, Phone, Clock, Loader2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
@@ -31,6 +31,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { exportCasesToPDF, exportSingleCasePDF } from "@/lib/pdf-export";
 
 export default function DashboardPage() {
   const { toast } = useToast();
@@ -67,16 +68,24 @@ export default function DashboardPage() {
 
   const recentCases = cases.slice(0, 5);
 
-  const handleExport = () => {
+  const handleExport = async () => {
+    if (cases.length === 0) {
+      toast({ title: "No data found to export.", variant: "destructive" });
+      return;
+    }
     setIsExporting(true);
-    setTimeout(() => {
-      toast({
-        title: "Report Generated",
-        description: "Global system activity PDF has been downloaded successfully.",
-        className: "bg-primary text-white",
-      });
-      setIsExporting(false);
-    }, 800);
+    await exportCasesToPDF(cases, "Global System Activity Report");
+    setIsExporting(false);
+    toast({
+      title: "Report Generated",
+      description: "Global system activity PDF has been downloaded successfully.",
+      className: "bg-primary text-white",
+    });
+  };
+
+  const handleExportSingle = (c: MalariaCase) => {
+    exportSingleCasePDF(c);
+    toast({ title: "Case Exported", description: `PDF for ${c.id} downloaded.` });
   };
 
   const handleViewDetails = (c: MalariaCase) => {
@@ -95,7 +104,8 @@ export default function DashboardPage() {
         </div>
         {isAdmin && (
           <Button onClick={handleExport} disabled={isExporting} className="bg-slate-800 hover:bg-slate-700 shadow-lg font-bold">
-            {isExporting ? "Generating..." : <><FileDown className="mr-2 h-4 w-4" /> Download Global PDF</>}
+            {isExporting ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <FileDown className="mr-2 h-4 w-4" />}
+            {isExporting ? "Generating..." : "Download Global PDF"}
           </Button>
         )}
       </div>
@@ -323,7 +333,7 @@ export default function DashboardPage() {
 
               <DialogFooter className="p-6 bg-slate-50 border-t">
                 <Button variant="outline" className="font-bold w-full sm:w-auto" onClick={() => setIsViewOpen(false)}>Close Record</Button>
-                <Button className="font-bold w-full sm:w-auto shadow-md" onClick={handleExport}>
+                <Button className="font-bold w-full sm:w-auto shadow-md" onClick={() => handleExportSingle(viewingCase)}>
                   <FileDown className="h-4 w-4 mr-2" /> Export Case PDF
                 </Button>
               </DialogFooter>

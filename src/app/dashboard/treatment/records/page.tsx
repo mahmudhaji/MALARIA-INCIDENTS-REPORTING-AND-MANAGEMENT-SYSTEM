@@ -33,7 +33,8 @@ import {
   MapPin,
   Activity,
   Phone,
-  Clock
+  Clock,
+  Loader2
 } from "lucide-react";
 import { format } from "date-fns";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -48,6 +49,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Separator } from "@/components/ui/separator";
+import { exportCasesToPDF, exportSingleCasePDF } from "@/lib/pdf-export";
 
 export default function TreatmentRecordsPage() {
   const { toast } = useToast();
@@ -61,29 +63,36 @@ export default function TreatmentRecordsPage() {
     setCases(getCases());
   }, []);
 
-  const handleExport = () => {
+  const treatmentRecords = cases.filter(c => 
+    c.testResult === 'Positive' &&
+    (c.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    c.id.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  const handleExportAll = async () => {
+    if (treatmentRecords.length === 0) {
+      toast({ title: "No treatment records to export.", variant: "destructive" });
+      return;
+    }
     setIsExporting(true);
-    setTimeout(() => {
-      toast({
-        title: "Report Generated",
-        description: "Medical Treatment Records PDF has been downloaded successfully.",
-        className: "bg-primary text-white",
-      });
-      setIsExporting(false);
-    }, 800);
+    await exportCasesToPDF(treatmentRecords, "Medical Treatment Records Report");
+    setIsExporting(false);
+    toast({
+      title: "Report Generated",
+      description: "Medical Treatment Records PDF has been downloaded successfully.",
+      className: "bg-primary text-white",
+    });
+  };
+
+  const handleExportSingle = (c: MalariaCase) => {
+    exportSingleCasePDF(c);
+    toast({ title: "Medical File Downloaded", description: `Exported patient data for ${c.id}.` });
   };
 
   const handleViewDetails = (c: MalariaCase) => {
     setViewingCase(c);
     setIsViewOpen(true);
   };
-
-  // Only show cases that have treatment info or are positive
-  const treatmentRecords = cases.filter(c => 
-    c.testResult === 'Positive' &&
-    (c.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    c.id.toLowerCase().includes(searchTerm.toLowerCase()))
-  );
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
@@ -96,8 +105,9 @@ export default function TreatmentRecordsPage() {
            <Button variant="outline" size="sm" className="font-bold border-primary/20 text-primary">
              <Filter className="mr-2 h-4 w-4" /> Filter Records
            </Button>
-           <Button size="sm" onClick={handleExport} disabled={isExporting} className="font-bold shadow-md">
-             {isExporting ? "Generating..." : <><FileDown className="mr-2 h-4 w-4" /> Download PDF Report</>}
+           <Button size="sm" onClick={handleExportAll} disabled={isExporting} className="font-bold shadow-md">
+             {isExporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileDown className="mr-2 h-4 w-4" />}
+             {isExporting ? "Generating..." : "Download PDF Report"}
            </Button>
         </div>
       </div>
@@ -177,8 +187,8 @@ export default function TreatmentRecordsPage() {
                         <DropdownMenuItem onClick={() => handleViewDetails(record)}>
                           <Eye className="mr-2 h-4 w-4 text-blue-500" /> View Detailed File
                         </DropdownMenuItem>
-                        <DropdownMenuItem>
-                          <FileEdit className="mr-2 h-4 w-4 text-amber-500" /> Update Treatment
+                        <DropdownMenuItem onClick={() => handleExportSingle(record)}>
+                          <FileDown className="mr-2 h-4 w-4 text-primary" /> Download PDF
                         </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
@@ -302,7 +312,7 @@ export default function TreatmentRecordsPage() {
 
               <DialogFooter className="p-6 bg-slate-50 border-t">
                 <Button variant="outline" className="font-bold w-full sm:w-auto" onClick={() => setIsViewOpen(false)}>Close Record</Button>
-                <Button className="font-bold w-full sm:w-auto shadow-md" onClick={handleExport}>
+                <Button className="font-bold w-full sm:w-auto shadow-md" onClick={() => handleExportSingle(viewingCase)}>
                   <FileDown className="h-4 w-4 mr-2" /> Export Medical PDF
                 </Button>
               </DialogFooter>
