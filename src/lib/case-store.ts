@@ -2,17 +2,18 @@
 "use client";
 
 import { MalariaCase } from "./types";
-import { MOCK_CASES } from "./mock-data";
 
 const CASES_KEY = "pata_malaria_cases";
 
+/**
+ * Initial cases are now empty as per request to "display only data that i add".
+ */
 export function getCases(): MalariaCase[] {
-  if (typeof window === "undefined") return MOCK_CASES;
+  if (typeof window === "undefined") return [];
   const data = localStorage.getItem(CASES_KEY);
   if (!data) {
-    // Initialize with mock data if empty
-    localStorage.setItem(CASES_KEY, JSON.stringify(MOCK_CASES));
-    return MOCK_CASES;
+    localStorage.setItem(CASES_KEY, JSON.stringify([]));
+    return [];
   }
   return JSON.parse(data);
 }

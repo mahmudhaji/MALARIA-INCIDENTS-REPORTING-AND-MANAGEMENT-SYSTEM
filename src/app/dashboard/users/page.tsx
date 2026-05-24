@@ -35,28 +35,19 @@ import {
 import { UserPlus, Search, Edit2, Trash2, Loader2, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import Link from "next/link";
-
-const INITIAL_USERS = [
-  { id: "1", username: "asha01", fullName: "Asha Hamisi", role: "CHW", status: "Active", email: "asha@health.go.ke" },
-  { id: "2", username: "peter01", fullName: "Dr. Peter John", role: "Doctor", status: "Active", email: "peter@health.go.ke" },
-  { id: "3", username: "officer01", fullName: "Grace Mollel", role: "Health Officer", status: "Active", email: "grace@health.go.ke" },
-  { id: "4", username: "admin01", fullName: "System Admin", role: "Administrator", status: "Active", email: "admin@health.go.ke" },
-  { id: "5", username: "jane_chw", fullName: "Jane Mukuwi", role: "CHW", status: "Active", email: "jane@health.go.ke" },
-  { id: "6", username: "doctor_smith", fullName: "Dr. Alice Smith", role: "Doctor", status: "Active", email: "alice@health.go.ke" },
-  { id: "7", username: "karanja_h", fullName: "Karanja Health", role: "Health Officer", status: "Active", email: "karanja@health.go.ke" },
-];
+import { getManagedUsers, saveManagedUser, updateManagedUser, deleteManagedUser, ManagedUser } from "@/lib/user-store";
 
 function UserManagementContent() {
   const { toast } = useToast();
   const searchParams = useSearchParams();
   const roleFilter = searchParams.get('role');
   
-  const [users, setUsers] = useState(INITIAL_USERS);
+  const [users, setUsers] = useState<ManagedUser[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState(roleFilter || "CHW");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [editingUser, setEditingUser] = useState<any>(null);
+  const [editingUser, setEditingUser] = useState<ManagedUser | null>(null);
 
   const [formData, setFormData] = useState({
     username: "",
@@ -65,6 +56,10 @@ function UserManagementContent() {
     role: "CHW",
     status: "Active"
   });
+
+  useEffect(() => {
+    setUsers(getManagedUsers());
+  }, []);
 
   useEffect(() => {
     if (roleFilter) {
@@ -81,7 +76,7 @@ function UserManagementContent() {
     );
   };
 
-  const handleOpenForm = (user?: any) => {
+  const handleOpenForm = (user?: ManagedUser) => {
     if (user) {
       setEditingUser(user);
       setFormData({
@@ -110,18 +105,21 @@ function UserManagementContent() {
     
     setTimeout(() => {
       if (editingUser) {
-        setUsers(users.map(u => u.id === editingUser.id ? { ...u, ...formData } : u));
+        const updated = updateManagedUser({ ...editingUser, ...formData });
+        setUsers(updated);
         toast({
           title: "User Updated",
           description: `${formData.fullName}'s profile has been updated successfully.`,
           className: "bg-green-600 text-white",
         });
       } else {
-        const newUser = {
+        const newUser: ManagedUser = {
           id: Math.random().toString(36).substr(2, 9),
-          ...formData
+          ...formData,
+          createdAt: new Date().toISOString()
         };
-        setUsers([newUser, ...users]);
+        const updated = saveManagedUser(newUser);
+        setUsers(updated);
         toast({
           title: "User Created",
           description: `${formData.fullName} has been added to the system.`,
@@ -130,12 +128,13 @@ function UserManagementContent() {
       }
       setIsSubmitting(false);
       setIsFormOpen(false);
-    }, 800);
+    }, 400);
   };
 
   const handleDeleteUser = (id: string, name: string) => {
     if (confirm(`Are you sure you want to remove ${name}?`)) {
-      setUsers(users.filter(u => u.id !== id));
+      const updated = deleteManagedUser(id);
+      setUsers(updated);
       toast({
         title: "User Deleted",
         description: `${name} has been removed from the system.`,
@@ -144,7 +143,7 @@ function UserManagementContent() {
     }
   };
 
-  const UserTable = ({ roleUsers }: { roleUsers: typeof INITIAL_USERS }) => (
+  const UserTable = ({ roleUsers }: { roleUsers: ManagedUser[] }) => (
     <div className="rounded-md border bg-white shadow-sm overflow-hidden animate-in fade-in duration-300">
       <Table>
         <TableHeader className="bg-slate-50">

@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { getCases } from "@/lib/case-store";
+import { getManagedUsers } from "@/lib/user-store";
 import { getCurrentUser } from "@/lib/auth-store";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
@@ -21,12 +22,17 @@ import { MalariaCase } from "@/lib/types";
 
 export default function DashboardPage() {
   const [cases, setCases] = useState<MalariaCase[]>([]);
+  const [managedUsers, setManagedUsers] = useState<any[]>([]);
   const currentUser = getCurrentUser();
 
   useEffect(() => {
     setCases(getCases());
+    setManagedUsers(getManagedUsers());
   }, []);
 
+  const isAdmin = currentUser?.role === 'Administrator';
+
+  // Case Stats
   const stats = {
     total: cases.length,
     pending: cases.filter(c => c.status === 'Reported').length,
@@ -34,41 +40,78 @@ export default function DashboardPage() {
     active: cases.filter(c => c.status === 'Under Treatment').length
   };
 
+  // User Stats (For Admin)
+  const userStats = {
+    total: managedUsers.length,
+    chw: managedUsers.filter(u => u.role === 'CHW').length,
+    doctor: managedUsers.filter(u => u.role === 'Doctor').length,
+    officer: managedUsers.filter(u => u.role === 'Health Officer').length,
+  };
+
   const recentCases = cases.slice(0, 5);
 
   return (
     <div className="space-y-8 animate-in fade-in duration-500">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight text-slate-800">Welcome, {currentUser?.name || "User"} ({currentUser?.role})</h1>
-        <p className="text-sm text-muted-foreground">Malaria incidence surveillance summary for today.</p>
+        <h1 className="text-2xl font-bold tracking-tight text-slate-800">Welcome, {currentUser?.name || "User"}</h1>
+        <p className="text-sm text-muted-foreground uppercase tracking-widest font-bold">
+          {isAdmin ? "System Administration Dashboard" : "Surveillance Summary"}
+        </p>
       </div>
 
-      <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-        <StatCard 
-          title="Total Cases Reported" 
-          value={stats.total} 
-          variant="blue"
-        />
-        <StatCard 
-          title="Pending Review" 
-          value={stats.pending} 
-          variant="green"
-        />
-        <StatCard 
-          title="Treated Cases" 
-          value={stats.treated} 
-          variant="orange"
-        />
-        <StatCard 
-          title="Active Cases" 
-          value={stats.active} 
-          variant="red"
-        />
-      </div>
+      {isAdmin ? (
+        <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+          <StatCard 
+            title="Total CHWs" 
+            value={userStats.chw} 
+            variant="blue"
+          />
+          <StatCard 
+            title="Medical Doctors" 
+            value={userStats.doctor} 
+            variant="green"
+          />
+          <StatCard 
+            title="Health Officers" 
+            value={userStats.officer} 
+            variant="orange"
+          />
+          <StatCard 
+            title="Registered Users" 
+            value={userStats.total} 
+            variant="red"
+          />
+        </div>
+      ) : (
+        <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+          <StatCard 
+            title="Total Cases Reported" 
+            value={stats.total} 
+            variant="blue"
+          />
+          <StatCard 
+            title="Pending Review" 
+            value={stats.pending} 
+            variant="green"
+          />
+          <StatCard 
+            title="Treated Cases" 
+            value={stats.treated} 
+            variant="orange"
+          />
+          <StatCard 
+            title="Active Cases" 
+            value={stats.active} 
+            variant="red"
+          />
+        </div>
+      )}
 
       <Card className="border shadow-sm">
         <CardHeader className="bg-slate-50 border-b py-3">
-          <CardTitle className="text-sm font-bold text-slate-700">Recent Cases</CardTitle>
+          <CardTitle className="text-sm font-bold text-slate-700">
+            {isAdmin ? "Latest Registered Cases" : "Recent Case Submissions"}
+          </CardTitle>
         </CardHeader>
         <CardContent className="p-0">
           <Table>
@@ -105,7 +148,10 @@ export default function DashboardPage() {
               {recentCases.length === 0 && (
                 <TableRow>
                   <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
-                    No cases reported yet.
+                    <div className="flex flex-col items-center justify-center space-y-1">
+                       <p className="font-bold">No data found.</p>
+                       <p className="text-xs">Start by adding new field reports or users.</p>
+                    </div>
                   </TableCell>
                 </TableRow>
               )}
