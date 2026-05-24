@@ -13,9 +13,9 @@ export interface ManagedUser {
   createdAt: string;
 }
 
-const USERS_KEY = "pata_malaria_managed_users";
+const USERS_KEY = "pata_malaria_managed_users_v2"; // Incremented key to force-clear old prototype data
 
-// Initial list is now empty to ensure only user-added data is displayed.
+// Initial list is empty to ensure only data added by the Admin is displayed.
 const INITIAL_MANAGED_USERS: ManagedUser[] = [];
 
 export function getManagedUsers(): ManagedUser[] {

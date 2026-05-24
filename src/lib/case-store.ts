@@ -3,10 +3,11 @@
 
 import { MalariaCase } from "./types";
 
-const CASES_KEY = "pata_malaria_cases";
+const CASES_KEY = "pata_malaria_cases_v2"; // Incremented key to force-clear old prototype data
 
 /**
- * Initial cases are now empty as per request to "display only data that i add".
+ * Fetches cases from local storage. Returns an empty array if no data is found,
+ * ensuring the system starts with a clean slate.
  */
 export function getCases(): MalariaCase[] {
   if (typeof window === "undefined") return [];
