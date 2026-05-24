@@ -20,14 +20,14 @@ For prototype demonstration, please use the following credentials. Each role has
 
 ## ✨ Key Features
 
-### 1. Multi-Role Authentication
-- **Secure Login**: Professional portal with password visibility toggles and role-based redirection.
-- **Session Management**: Secure client-side state with persistence.
+### 1. Functional Data Persistence
+- **User-Driven Data**: The system starts with a clean slate. All cases and managed users displayed are those added during your session, ensuring data isolation.
+- **Local Persistence**: Data is saved to your browser's local storage, maintaining state across page reloads within the same session.
 
 ### 2. Clinical Case Management
-- **Incident Reporting**: CHWs and Doctors can report cases with geospatial coordinates and symptom lists.
-- **Treatment Form**: Doctors can prescribe medications (ACTs, Quinine, etc.) and set follow-up dates.
-- **Treatment Records**: A centralized registry accessible by Doctors, Health Officers, and Admins to monitor recovery outcomes.
+- **CHW Reporting**: Community Health Workers can log new incidents with detailed patient demographics, symptoms, and geospatial coordinates.
+- **Doctor Treatment Form**: Doctors can select an active Case ID to auto-fill patient history, then finalize clinical assessments and prescriptions (ACTs, Quinine, etc.).
+- **Case Registry**: A unified table for viewing, editing, updating status, or archiving patient records with real-time feedback.
 
 ### 3. AI-Powered Surveillance (Health Officer)
 - **Surge Detection**: AI analysis comparing current case counts against historical averages to detect regional spikes.
@@ -35,14 +35,15 @@ For prototype demonstration, please use the following credentials. Each role has
 - **Interactive Map**: Visual representation of incidents with priority markers for critical cases.
 
 ### 4. Administrative Oversight
-- **User Management**: Administrators can add, update, or deactivate accounts for CHWs, Doctors, and Officers.
+- **Staff Management**: Administrators can add, update, or delete accounts for CHWs, Doctors, and Officers.
+- **Role Analytics**: The Admin dashboard provides real-time counts of active health staff and total system-wide case activity.
 - **Audit Trails**: Global access to treatment records for system-wide performance auditing.
 
 ## 🛠 Tech Stack
 - **Frontend**: Next.js 15 (App Router), TypeScript, Tailwind CSS
-- **UI Components**: Shadcn UI, Lucide Icons, Recharts (for trend analysis)
+- **UI Components**: Shadcn UI, Lucide Icons, Recharts
 - **AI Integration**: Genkit with Google Gemini 2.0 Flash
-- **Styling**: Professional Blue Corporate Theme
+- **State Management**: Persistent Local Storage Utilities
 
 ## 🏗 Setup & Installation
 1. **Clone the repository**
@@ -50,4 +51,4 @@ For prototype demonstration, please use the following credentials. Each role has
 3. **Run Development Server**: `npm run dev`
 4. **Environment Variables**: Add `GOOGLE_GENAI_API_KEY` to `.env` for AI features.
 
-The application will be available at `http://localhost:9002` (standard development port).
+The application will be available at `http://localhost:9002`.
