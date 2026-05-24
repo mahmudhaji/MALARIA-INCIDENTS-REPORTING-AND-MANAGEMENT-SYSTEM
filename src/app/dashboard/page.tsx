@@ -19,6 +19,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
 import { MalariaCase } from "@/lib/types";
+import { Separator } from "@/components/ui/separator";
 
 export default function DashboardPage() {
   const [cases, setCases] = useState<MalariaCase[]>([]);
@@ -55,34 +56,43 @@ export default function DashboardPage() {
       <div className="flex flex-col gap-1">
         <h1 className="text-2xl font-bold tracking-tight text-slate-800">Welcome, {currentUser?.name || "User"}</h1>
         <p className="text-sm text-muted-foreground uppercase tracking-widest font-bold">
-          {isAdmin ? "System Administration Dashboard" : "Surveillance Summary"}
+          {isAdmin ? "System Administration Overview" : "Surveillance Summary"}
         </p>
       </div>
 
-      {isAdmin ? (
-        <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
-          <StatCard 
-            title="Total CHWs" 
-            value={userStats.chw} 
-            variant="blue"
-          />
-          <StatCard 
-            title="Medical Doctors" 
-            value={userStats.doctor} 
-            variant="green"
-          />
-          <StatCard 
-            title="Health Officers" 
-            value={userStats.officer} 
-            variant="orange"
-          />
-          <StatCard 
-            title="Registered Users" 
-            value={userStats.total} 
-            variant="red"
-          />
+      {isAdmin && (
+        <div className="space-y-6">
+          <div className="space-y-3">
+             <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest px-1">Staff Management</h3>
+             <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
+              <StatCard 
+                title="Total CHWs" 
+                value={userStats.chw} 
+                variant="blue"
+              />
+              <StatCard 
+                title="Medical Doctors" 
+                value={userStats.doctor} 
+                variant="blue"
+              />
+              <StatCard 
+                title="Health Officers" 
+                value={userStats.officer} 
+                variant="blue"
+              />
+              <StatCard 
+                title="Registered Users" 
+                value={userStats.total} 
+                variant="blue"
+              />
+            </div>
+          </div>
+          <Separator />
         </div>
-      ) : (
+      )}
+
+      <div className="space-y-3">
+        {isAdmin && <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest px-1">Case & Treatment Overview</h3>}
         <div className="grid gap-4 grid-cols-2 md:grid-cols-4">
           <StatCard 
             title="Total Cases Reported" 
@@ -105,7 +115,7 @@ export default function DashboardPage() {
             variant="red"
           />
         </div>
-      )}
+      </div>
 
       <Card className="border shadow-sm">
         <CardHeader className="bg-slate-50 border-b py-3">
@@ -150,7 +160,7 @@ export default function DashboardPage() {
                   <TableCell colSpan={5} className="h-24 text-center text-muted-foreground">
                     <div className="flex flex-col items-center justify-center space-y-1">
                        <p className="font-bold">No data found.</p>
-                       <p className="text-xs">Start by adding new field reports or users.</p>
+                       <p className="text-xs">Start by adding new field reports or users to see them here.</p>
                     </div>
                   </TableCell>
                 </TableRow>

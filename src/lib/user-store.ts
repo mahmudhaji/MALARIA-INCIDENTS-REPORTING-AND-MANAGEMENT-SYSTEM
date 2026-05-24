@@ -15,14 +15,8 @@ export interface ManagedUser {
 
 const USERS_KEY = "pata_malaria_managed_users";
 
-// We keep these for the prototype system to function, but they won't be in the "Added by Admin" count if we strictly filter by a session flag, 
-// however usually users want to see the management list populated with the base accounts.
-const INITIAL_MANAGED_USERS: ManagedUser[] = [
-  { id: "1", username: "asha01", fullName: "Asha Hamisi", role: "CHW", status: "Active", email: "asha@health.go.ke", createdAt: new Date().toISOString() },
-  { id: "2", username: "peter01", fullName: "Dr. Peter John", role: "Doctor", status: "Active", email: "peter@health.go.ke", createdAt: new Date().toISOString() },
-  { id: "3", username: "officer01", fullName: "Grace Mollel", role: "Health Officer", status: "Active", email: "grace@health.go.ke", createdAt: new Date().toISOString() },
-  { id: "4", username: "admin01", fullName: "System Admin", role: "Administrator", status: "Active", email: "admin@health.go.ke", createdAt: new Date().toISOString() },
-];
+// Initial list is now empty to ensure only user-added data is displayed.
+const INITIAL_MANAGED_USERS: ManagedUser[] = [];
 
 export function getManagedUsers(): ManagedUser[] {
   if (typeof window === "undefined") return [];
