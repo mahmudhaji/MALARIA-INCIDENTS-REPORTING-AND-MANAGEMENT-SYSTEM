@@ -1,41 +1,22 @@
 
-"use client";
+'use client';
 
+// This file now redirects to Server Actions for database interaction.
 import { MalariaCase } from "./types";
+import { getCases as apiGetCases, saveCase as apiSaveCase, updateCase as apiUpdateCase, deleteCase as apiDeleteCase } from "@/app/actions/cases";
 
-const CASES_KEY = "pata_malaria_cases_v2"; // Incremented key to force-clear old prototype data
-
-/**
- * Fetches cases from local storage. Returns an empty array if no data is found,
- * ensuring the system starts with a clean slate.
- */
-export function getCases(): MalariaCase[] {
-  if (typeof window === "undefined") return [];
-  const data = localStorage.getItem(CASES_KEY);
-  if (!data) {
-    localStorage.setItem(CASES_KEY, JSON.stringify([]));
-    return [];
-  }
-  return JSON.parse(data);
+export async function getCases(): Promise<MalariaCase[]> {
+  return apiGetCases();
 }
 
-export function saveCase(newCase: MalariaCase) {
-  const cases = getCases();
-  const updatedCases = [newCase, ...cases];
-  localStorage.setItem(CASES_KEY, JSON.stringify(updatedCases));
-  return updatedCases;
+export async function saveCase(newCase: MalariaCase) {
+  await apiSaveCase(newCase);
 }
 
-export function updateCase(updatedCase: MalariaCase) {
-  const cases = getCases();
-  const updatedCases = cases.map((c) => (c.id === updatedCase.id ? updatedCase : c));
-  localStorage.setItem(CASES_KEY, JSON.stringify(updatedCases));
-  return updatedCases;
+export async function updateCase(updatedCase: MalariaCase) {
+  await apiUpdateCase(updatedCase);
 }
 
-export function deleteCase(id: string) {
-  const cases = getCases();
-  const updatedCases = cases.filter((c) => c.id !== id);
-  localStorage.setItem(CASES_KEY, JSON.stringify(updatedCases));
-  return updatedCases;
+export async function deleteCase(id: string) {
+  await apiDeleteCase(id);
 }

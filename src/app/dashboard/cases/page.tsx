@@ -62,6 +62,7 @@ export default function CaseManagementPage() {
   const { toast } = useToast();
   const [cases, setCases] = useState<MalariaCase[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
+  const [isLoadingData, setIsLoadingData] = useState(true);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false);
   const [editingCase, setEditingCase] = useState<MalariaCase | null>(null);
@@ -70,8 +71,20 @@ export default function CaseManagementPage() {
   const [isExporting, setIsExporting] = useState(false);
 
   useEffect(() => {
-    setCases(getCases());
+    loadData();
   }, []);
+
+  async function loadData() {
+    setIsLoadingData(true);
+    try {
+      const data = await getCases();
+      setCases(data);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoadingData(false);
+    }
+  }
 
   const filteredCases = cases.filter(c => 
     c.patientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -95,10 +108,10 @@ export default function CaseManagementPage() {
     toast({ title: "Export Complete", description: `Medical file for ${caseItem.id} downloaded.` });
   };
 
-  const handleDeleteCase = (id: string, name: string) => {
+  const handleDeleteCase = async (id: string, name: string) => {
     if (confirm(`Are you sure you want to archive the case for ${name}?`)) {
-      const updated = deleteCase(id);
-      setCases(updated);
+      await deleteCase(id);
+      loadData();
       toast({
         title: "Action Successful",
         description: `Case ${id} (${name}) has been archived.`,
@@ -117,31 +130,34 @@ export default function CaseManagementPage() {
     setIsViewDialogOpen(true);
   };
 
-  const handleUpdateCase = (e: React.FormEvent) => {
+  const handleUpdateCase = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingCase) return;
     setIsSubmitting(true);
     
-    setTimeout(() => {
-      const updated = updateCase(editingCase);
-      setCases(updated);
+    try {
+      await updateCase(editingCase);
+      await loadData();
       toast({
         title: "Success",
         description: `Medical records for ${editingCase.patientName} have been updated.`,
         className: "bg-green-600 text-white",
       });
-      setIsSubmitting(false);
       setIsEditDialogOpen(false);
-    }, 300);
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const toggleStatus = (id: string, currentStatus: string) => {
+  const toggleStatus = async (id: string, currentStatus: string) => {
     const caseToUpdate = cases.find(c => c.id === id);
     if (!caseToUpdate) return;
 
     const nextStatus = currentStatus === 'Recovered' ? 'Under Treatment' : 'Recovered';
-    const updated = updateCase({ ...caseToUpdate, status: nextStatus as any });
-    setCases(updated);
+    await updateCase({ ...caseToUpdate, status: nextStatus as any });
+    await loadData();
     
     toast({
       title: "Status Updated",
@@ -194,7 +210,16 @@ export default function CaseManagementPage() {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredCases.map((caseItem) => (
+            {isLoadingData ? (
+              <TableRow>
+                <TableCell colSpan={7} className="h-48 text-center">
+                  <div className="flex flex-col items-center justify-center space-y-2 text-muted-foreground">
+                    <Loader2 className="h-8 w-8 animate-spin text-primary" />
+                    <p className="font-bold">Syncing with database...</p>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : filteredCases.map((caseItem) => (
               <TableRow key={caseItem.id} className="hover:bg-slate-50/50 transition-colors">
                 <TableCell className="font-mono text-xs font-bold text-primary">{caseItem.id}</TableCell>
                 <TableCell>
@@ -206,7 +231,7 @@ export default function CaseManagementPage() {
                 <TableCell className="text-sm font-medium">{caseItem.area}</TableCell>
                 <TableCell>
                   <Badge variant={caseItem.testResult === 'Positive' ? 'destructive' : caseItem.testResult === 'Negative' ? 'secondary' : 'outline'} className="text-[10px] uppercase font-bold">
-                    {caseItem.testResult}
+                    {caseResultToDisplay(caseItem.testResult)}
                   </Badge>
                 </TableCell>
                 <TableCell>
@@ -249,7 +274,7 @@ export default function CaseManagementPage() {
                 </TableCell>
               </TableRow>
             ))}
-            {filteredCases.length === 0 && (
+            {!isLoadingData && filteredCases.length === 0 && (
               <TableRow>
                 <TableCell colSpan={7} className="h-48 text-center">
                   <div className="flex flex-col items-center justify-center space-y-2 text-muted-foreground">
@@ -463,4 +488,10 @@ export default function CaseManagementPage() {
       </Dialog>
     </div>
   );
+}
+
+function caseResultToDisplay(res: string) {
+  if (res === 'Positive') return 'Positive (+)';
+  if (res === 'Negative') return 'Negative (-)';
+  return 'Pending';
 }

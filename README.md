@@ -1,43 +1,70 @@
 
-# PataMalaria - Malaria Incidents Reporting and Management System
+# PataMalaria - Local SQL Setup Guide
 
-PataMalaria is a comprehensive digital solution designed to streamline the reporting, tracking, and analysis of malaria incidents. This system empowers community health workers and medical officers with real-time data and AI-driven insights.
+This application has been migrated to a professional full-stack architecture using **Next.js**, **Prisma ORM**, and **SQL** (MySQL or PostgreSQL). Follow these steps to run the application on your local machine with persistent database storage.
 
-## 🚀 Overview
+## 🚀 Step-by-Step Local Setup
 
-The portal provides a centralized platform for various health stakeholders to manage malaria cases from field reporting to clinical treatment.
+### 1. Prerequisites
+- **Node.js** (v18 or newer installed)
+- **Git**
+- **A SQL Database**: Install [PostgreSQL](https://www.postgresql.org/download/) (Recommended) or [MySQL](https://dev.mysql.com/downloads/installer/).
 
-## 👥 User Roles & Credentials
+### 2. Database Creation
+1. Open your SQL terminal (e.g., pgAdmin for Postgres or MySQL Workbench).
+2. Create a new empty database named `patamalaria`:
+   ```sql
+   CREATE DATABASE patamalaria;
+   ```
 
-For prototype demonstration, please use the following credentials. The system starts with **zero data**—all patients and managed staff shown will be those you create during your session.
+### 3. Environment Configuration
+1. Open the `.env` file in the project root.
+2. Update the `DATABASE_URL` with your local credentials:
 
-| Role | Username | Password | Key Responsibilities |
-|------|----------|----------|----------------------|
-| **CHW** | `chw_user` | `password123` | Field reporting and submission tracking. |
-| **Doctor** | `doctor_user` | `password123` | Clinical diagnosis and treatment logging. |
-| **Health Officer** | `officer_user` | `password123` | Surveillance, hotspot mapping, and alerts. |
-| **Administrator** | `admin_user` | `password123` | System oversight and user management. |
+   **For PostgreSQL:**
+   ```
+   DATABASE_URL="postgresql://username:password@localhost:5432/patamalaria?schema=public"
+   ```
 
-## ✨ Key Features
+   **For MySQL:** (Also change `provider = "postgresql"` to `provider = "mysql"` in `prisma/schema.prisma`)
+   ```
+   DATABASE_URL="mysql://username:password@localhost:3306/patamalaria"
+   ```
 
-### 1. Zero-Config Data Entry (Clean Slate)
-- **Data Isolation**: All default mock records (like "Jane Doe" or "Grace Mollel") have been removed. 
-- **User-Driven Storage**: The Case Registry, Treatment Records, and Map will only populate with data you add using the reporting forms.
-- **Persistence**: Data is saved to your browser's local storage for continuity within your session.
+3. (Optional) Add your `GOOGLE_GENAI_API_KEY` for AI features.
 
-### 2. Clinical Workflow
-- **CHW Reporting**: Log new incidents with symptoms and GPS coordinates.
-- **Doctor Assessment**: Select a Case ID to review history and prescribe medication.
-- **Admin Management**: Add/Edit/Delete staff roles and monitor global activity.
+### 4. Installation & Migration
+Open your terminal in the project folder and run:
 
-### 3. PDF Reporting
-- Generate professional PDF medical files for individual patients or full registry summaries directly to your machine.
+```bash
+# Install all dependencies
+npm install
 
-### 4. AI Analytics
-- Automated hotspot detection and surge alerts based on your session's reported data.
+# Push the schema to your local database
+npx prisma db push
 
-## 🛠 Setup & Installation
-1. **Clone the repository**
-2. **Install dependencies**: `npm install`
-3. **Run Development Server**: `npm run dev`
-4. **Environment Variables**: Add `GOOGLE_GENAI_API_KEY` to `.env` for AI features.
+# Generate the Prisma client
+npx prisma generate
+```
+
+### 5. Start the Application
+```bash
+npm run dev
+```
+The app will be running at [http://localhost:9002](http://localhost:9002).
+
+## 👥 User Roles & Persistence
+Unlike the prototype version, all data is now saved to your **Local SQL Server**.
+
+| Role | Username | Password |
+|------|----------|----------|
+| **CHW** | `chw_user` | `password123` |
+| **Doctor** | `doctor_user` | `password123` |
+| **Health Officer** | `officer_user` | `password123` |
+| **Administrator** | `admin_user` | `password123` |
+
+## ✨ Features
+- **SQL Persistence**: Real database storage for all cases and users.
+- **Server Actions**: Secure data fetching and mutations.
+- **AI Analytics**: Hotspot detection powered by Genkit.
+- **PDF Export**: Generate medical reports locally.
